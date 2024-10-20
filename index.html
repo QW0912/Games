@@ -31,12 +31,19 @@
             align-items: center;
             cursor: pointer;
         }
+        #message {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
     <h1>لعبة إكس أو</h1>
-    <div class="board">
+    <div>
+        <button onclick="startGame(1)">العب مع الكمبيوتر</button>
+        <button onclick="startGame(2)">العب مع صديق</button>
+    </div>
+    <div class="board" id="board">
         <div class="cell" id="cell0"></div>
         <div class="cell" id="cell1"></div>
         <div class="cell" id="cell2"></div>
@@ -48,18 +55,126 @@
         <div class="cell" id="cell8"></div>
     </div>
 
-    <script>
-        const cells = document.querySelectorAll('.cell');
-        let currentPlayer = 'X';
+    <h2 id="message"></h2>
 
-        cells.forEach(cell => {
-            cell.addEventListener('click', () => {
-                if (cell.textContent === '') {
-                    cell.textContent = currentPlayer;
-                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                }
+    <audio id="clapSound" src="https://www.soundjay.com/human/applause-8.mp3"></audio>
+
+    <script>
+        let board;
+        let currentPlayer;
+        let playerCount;
+        let gameRound = 1;
+        let maxRounds = 3;
+        let playerXWins = 0;
+        let playerOWins = 0;
+
+        const cells = document.querySelectorAll('.cell');
+        const clapSound = document.getElementById('clapSound');
+        const message = document.getElementById('message');
+
+        function startGame(players) {
+            playerCount = players;
+            resetBoard();
+            currentPlayer = 'X';
+            message.textContent = `الجولة ${gameRound} - الدور لـ X`;
+            cells.forEach(cell => {
+                cell.addEventListener('click', handleClick);
             });
-        });
+        }
+
+        function resetBoard() {
+            board = ["", "", "", "", "", "", "", "", ""];
+            cells.forEach(cell => cell.textContent = "");
+        }
+
+        function handleClick(event) {
+            const index = Array.from(cells).indexOf(event.target);
+            if (board[index] !== "") return; // Ignore already filled cells
+            board[index] = currentPlayer;
+            event.target.textContent = currentPlayer;
+
+            if (checkWinner()) {
+                gameEnd(currentPlayer);
+                return;
+            } else if (boardFull()) {
+                gameEnd(null); // It's a tie
+                return;
+            }
+
+            switchPlayer();
+            if (playerCount === 1 && currentPlayer === 'O') {
+                computerMove();
+            }
+        }
+
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            message.textContent = `الجولة ${gameRound} - الدور لـ ${currentPlayer}`;
+        }
+
+        function boardFull() {
+            return board.every(cell => cell !== "");
+        }
+
+        function checkWinner() {
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                [0, 4, 8], [2, 4, 6]  // diagonals
+            ];
+
+            return winPatterns.some(pattern => {
+                return pattern.every(index => board[index] === currentPlayer);
+            });
+        }
+
+        function gameEnd(winner) {
+            if (winner) {
+                message.textContent = `لاعب ${winner} فاز في الجولة ${gameRound}!`;
+                clapSound.play();
+                if (winner === 'X') playerXWins++;
+                else playerOWins++;
+            } else {
+                message.textContent = `الجولة ${gameRound} انتهت بالتعادل!`;
+            }
+
+            if (gameRound < maxRounds) {
+                gameRound++;
+                setTimeout(resetBoard, 2000); // Reset board after 2 seconds for next round
+            } else {
+                endMatch();
+            }
+        }
+
+        function endMatch() {
+            cells.forEach(cell => cell.removeEventListener('click', handleClick));
+            if (playerXWins > playerOWins) {
+                message.textContent = "لاعب X فاز بالمباراة!";
+            } else if (playerOWins > playerXWins) {
+                message.textContent = "لاعب O فاز بالمباراة!";
+            } else {
+                message.textContent = "المباراة انتهت بالتعادل!";
+            }
+        }
+
+        function computerMove() {
+            let emptyCells = [];
+            board.forEach((cell, index) => {
+                if (cell === "") emptyCells.push(index);
+            });
+
+            const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            board[randomIndex] = 'O';
+            cells[randomIndex].textContent = 'O';
+
+            if (checkWinner()) {
+                gameEnd('O');
+            } else if (boardFull()) {
+                gameEnd(null);
+            } else {
+                switchPlayer();
+            }
+        }
     </script>
 </body>
 </html>
