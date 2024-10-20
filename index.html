@@ -31,18 +31,30 @@
             align-items: center;
             cursor: pointer;
         }
+        .options button {
+            font-size: 1.2em;
+            padding: 10px 20px;
+            margin: 10px;
+        }
         #message {
             margin-top: 20px;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 0.8em;
+            color: yellow;
         }
     </style>
 </head>
 <body>
 
     <h1>لعبة إكس أو</h1>
-    <div>
+    
+    <div class="options">
         <button onclick="startGame(1)">العب مع الكمبيوتر</button>
         <button onclick="startGame(2)">العب مع صديق</button>
     </div>
+    
     <div class="board" id="board">
         <div class="cell" id="cell0"></div>
         <div class="cell" id="cell1"></div>
@@ -58,6 +70,11 @@
     <h2 id="message"></h2>
 
     <audio id="clapSound" src="https://www.soundjay.com/human/applause-8.mp3"></audio>
+
+    <!-- نص ودود الشمري -->
+    <div class="footer">
+        ودود الشمري
+    </div>
 
     <script>
         let board;
