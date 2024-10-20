@@ -1,122 +1,271 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مجموعة ألعاب</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-        }
-        h1 {
-            color: #333;
-        }
-        .games button {
-            font-size: 1.2em;
-            padding: 10px 20px;
-            margin: 10px;
-        }
-        .footer {
-            margin-top: 30px;
-            font-size: 0.8em;
-            color: blue;
-        }
-    </style>
-</head>
-<body>
 
-    <h1>مجموعة ألعاب</h1>
+
+‏<!DOCTYPE html>
+‏<html lang="ar">
+‏<head>
+‏    <meta charset="UTF-8">
+‏    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+‏    <title>مجموعة ألعاب</title>
+‏    <style>
+‏        body {
+‏            font-family: Arial, sans-serif;
+‏            text-align: center;
+‏            background-color: #f4f4f4;
+        }
+‏        h1 {
+‏            color: #333;
+        }
+‏        .board {
+‏            display: grid;
+‏            grid-template-columns: repeat(3, 100px);
+‏            grid-gap: 10px;
+‏            justify-content: center;
+‏            margin-top: 50px;
+        }
+‏        .cell {
+‏            width: 100px;
+‏            height: 100px;
+‏            background-color: #fff;
+‏            border: 2px solid #333;
+‏            font-size: 2em;
+‏            display: flex;
+‏            justify-content: center;
+‏            align-items: center;
+‏            cursor: pointer;
+        }
+‏        .games button {
+‏            font-size: 1.2em;
+‏            padding: 10px 20px;
+‏            margin: 10px;
+        }
+‏        #message {
+‏            margin-top: 20px;
+‏            font-size: 1.2em;
+‏            color: green;
+        }
+‏        .footer {
+‏            margin-top: 30px;
+‏            font-size: 0.8em;
+‏            color: blue;
+        }
+‏    </style>
+‏</head>
+‏<body>
+
+‏    <h1>مجموعة ألعاب</h1>
     
     <!-- قائمة الألعاب -->
-    <div class="games">
-        <button onclick="playTicTacToe()">إكس أو</button>
-        <button onclick="playGuessNumber()">تخمين الرقم</button>
-        <button onclick="playRockPaperScissors()">حجر-ورقة-مقص</button>
-        <button onclick="playMemoryGame()">لعبة الذاكرة</button>
-        <button onclick="playQuizGame()">لعبة الأسئلة</button>
-    </div>
+‏    <div class="games">
+‏        <button onclick="playTicTacToe()">إكس أو</button>
+‏        <button onclick="playGuessNumber()">تخمين الرقم</button>
+‏        <button onclick="playRockPaperScissors()">حجر-ورقة-مقص</button>
+‏        <button onclick="playMemoryGame()">لعبة الذاكرة</button>
+‏        <button onclick="playQuizGame()">لعبة الأسئلة</button>
+‏    </div>
 
-    <div id="gameArea"></div>
+‏    <div id="gameArea"></div>
+‏    <h2 id="message"></h2>
 
     <!-- نص ودود الشمري -->
-    <div class="footer">
+‏    <div class="footer">
         ودود الشمري
-    </div>
+‏    </div>
 
-    <script>
-        // لعبة إكس أو
-        function playTicTacToe() {
-            document.getElementById('gameArea').innerHTML = `
-                <h2>لعبة إكس أو</h2>
-                <!-- هنا يمكنك وضع الكود الخاص بلعبة إكس أو مثل الذي وضعناه سابقًا -->
+‏    <audio id="clapSound" src="https://www.soundjay.com/human/applause-8.mp3"></audio>
+
+‏    <script>
+        // لعبة إكس أو مع خيار اللعب ضد صديق أو ضد الكمبيوتر
+‏        let board, currentPlayer, playerCount;
+‏        const clapSound = document.getElementById('clapSound');
+‏        const message = document.getElementById('message');
+
+‏        function playTicTacToe() {
+‏            document.getElementById('gameArea').innerHTML = `
+‏                <h2>لعبة إكس أو</h2>
+‏                <div>
+‏                    <button onclick="startTicTacToe(1)">العب مع الكمبيوتر</button>
+‏                    <button onclick="startTicTacToe(2)">العب مع صديق</button>
+‏                </div>
+‏                <div class="board" id="board">
+‏                    <div class="cell" id="cell0"></div>
+‏                    <div class="cell" id="cell1"></div>
+‏                    <div class="cell" id="cell2"></div>
+‏                    <div class="cell" id="cell3"></div>
+‏                    <div class="cell" id="cell4"></div>
+‏                    <div class="cell" id="cell5"></div>
+‏                    <div class="cell" id="cell6"></div>
+‏                    <div class="cell" id="cell7"></div>
+‏                    <div class="cell" id="cell8"></div>
+‏                </div>
             `;
+‏            resetBoard();
+        }
+
+‏        function startTicTacToe(players) {
+‏            playerCount = players;
+‏            currentPlayer = 'X';
+‏            board = ["", "", "", "", "", "", "", "", ""];
+‏            document.querySelectorAll('.cell').forEach(cell => {
+‏                cell.addEventListener('click', handleClick);
+            });
+‏            message.textContent = `الدور لـ X`;
+        }
+
+‏        function handleClick(event) {
+‏            const index = Array.from(document.querySelectorAll('.cell')).indexOf(event.target);
+‏            if (board[index] === "") {
+‏                board[index] = currentPlayer;
+‏                event.target.textContent = currentPlayer;
+‏                if (checkWinner()) {
+‏                    gameEnd(currentPlayer);
+‏                } else if (boardFull()) {
+‏                    gameEnd(null);
+‏                } else {
+‏                    switchPlayer();
+‏                    if (playerCount === 1 && currentPlayer === 'O') {
+‏                        computerMove();
+                    }
+                }
+            }
+        }
+
+‏        function switchPlayer() {
+‏            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+‏            message.textContent = `الدور لـ ${currentPlayer}`;
+        }
+
+‏        function computerMove() {
+‏            let emptyCells = [];
+‏            board.forEach((cell, index) => {
+‏                if (cell === "") emptyCells.push(index);
+            });
+‏            const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+‏            board[randomIndex] = 'O';
+‏            document.querySelectorAll('.cell')[randomIndex].textContent = 'O';
+‏            if (checkWinner()) {
+‏                gameEnd('O');
+‏            } else if (boardFull()) {
+‏                gameEnd(null);
+‏            } else {
+‏                switchPlayer();
+            }
+        }
+
+‏        function boardFull() {
+‏            return board.every(cell => cell !== "");
+        }
+
+‏        function checkWinner() {
+‏            const winPatterns = [
+‏                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+‏                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+‏                [0, 4, 8], [2, 4, 6]  // Diagonals
+            ];
+‏            return winPatterns.some(pattern => {
+‏                return pattern.every(index => board[index] === currentPlayer);
+            });
+        }
+
+‏        function gameEnd(winner) {
+‏            if (winner) {
+‏                message.textContent = `تهانينا! لاعب ${winner} فاز!`;
+‏                clapSound.play();
+‏            } else {
+‏                message.textContent = "انتهت اللعبة بالتعادل!";
+            }
+‏            document.querySelectorAll('.cell').forEach(cell => cell.removeEventListener('click', handleClick));
+        }
+
+‏        function resetBoard() {
+‏            board = ["", "", "", "", "", "", "", "", ""];
+‏            document.querySelectorAll('.cell').forEach(cell => {
+‏                cell.textContent = "";
+            });
         }
 
         // لعبة تخمين الرقم
-        function playGuessNumber() {
-            let randomNumber = Math.floor(Math.random() * 100) + 1;
-            let attempts = 0;
-            document.getElementById('gameArea').innerHTML = `
-                <h2>تخمين الرقم بين 1 و 100</h2>
-                <input type="number" id="guessInput" placeholder="أدخل رقمك">
-                <button onclick="checkGuess()">تحقق</button>
-                <p id="feedback"></p>
+‏        function playGuessNumber() {
+‏            let randomNumber = Math.floor(Math.random() * 100) + 1;
+‏            let attempts = 0;
+‏            document.getElementById('gameArea').innerHTML = `
+‏                <h2>تخمين الرقم بين 1 و 100</h2>
+‏                <input type="number" id="guessInput" placeholder="أدخل رقمك">
+‏                <button onclick="checkGuess()">تحقق</button>
+‏                <p id="feedback"></p>
             `;
             
-            window.checkGuess = function() {
-                let guess = document.getElementById('guessInput').value;
-                attempts++;
-                if (guess == randomNumber) {
-                    document.getElementById('feedback').textContent = "تهانينا! لقد خمّنت الرقم الصحيح في " + attempts + " محاولة.";
-                } else if (guess < randomNumber) {
-                    document.getElementById('feedback').textContent = "الرقم المدخل أصغر من الرقم المطلوب!";
-                } else {
-                    document.getElementById('feedback').textContent = "الرقم المدخل أكبر من الرقم المطلوب!";
+‏            window.checkGuess = function() {
+‏                let guess = document.getElementById('guessInput').value;
+‏                attempts++;
+‏                if (guess == randomNumber) {
+‏                    document.getElementById('feedback').textContent = "تهانينا! لقد خمّنت الرقم الصحيح في " + attempts + " محاولة.";
+‏                } else if (guess < randomNumber) {
+‏                    document.getElementById('feedback').textContent = "الرقم المدخل أصغر من الرقم المطلوب!";
+‏                } else {
+‏                    document.getElementById('feedback').textContent = "الرقم المدخل أكبر من الرقم المطلوب!";
                 }
             };
         }
 
         // لعبة حجر-ورقة-مقص
-        function playRockPaperScissors() {
-            document.getElementById('gameArea').innerHTML = `
-                <h2>حجر-ورقة-مقص</h2>
-                <button onclick="playRPS('حجر')">حجر</button>
-                <button onclick="playRPS('ورقة')">ورقة</button>
-                <button onclick="playRPS('مقص')">مقص</button>
-                <p id="rpsResult"></p>
+‏        function playRockPaperScissors() {
+‏            document.getElementById('gameArea').innerHTML = `
+‏                <h2>حجر-ورقة-مقص</h2>
+‏                <button onclick="playRPS('حجر')">حجر</button>
+‏                <button onclick="playRPS('ورقة')">ورقة</button>
+‏                <button onclick="playRPS('مقص')">مقص</button>
+‏                <p id="rpsResult"></p>
             `;
             
-            const choices = ["حجر", "ورقة", "مقص"];
-            window.playRPS = function(playerChoice) {
-                const computerChoice = choices[Math.floor(Math.random() * choices.length)];
-                if (playerChoice === computerChoice) {
-                    document.getElementById('rpsResult').textContent = `تعادل! الكمبيوتر اختار ${computerChoice} أيضًا.`;
-                } else if ((playerChoice === "حجر" && computerChoice === "مقص") ||
-                           (playerChoice === "ورقة" && computerChoice === "حجر") ||
-                           (playerChoice === "مقص" && computerChoice === "ورقة")) {
-                    document.getElementById('rpsResult').textContent = `لقد فزت! الكمبيوتر اختار ${computerChoice}.`;
-                } else {
-                    document.getElementById('rpsResult').textContent = `لقد خسرت! الكمبيوتر اختار ${computerChoice}.`;
+‏            const choices = ["حجر", "ورقة", "مقص"];
+‏            window.playRPS = function(playerChoice) {
+‏                const computerChoice = choices[Math.floor(Math.random() * choices.length)];
+‏                if (playerChoice === computerChoice) {
+‏                    document.getElementById('rpsResult').textContent = `تعادل! الكمبيوتر اختار ${computerChoice} أيضًا.`;
+‏                } else if ((playerChoice === "حجر" && computerChoice === "مقص") ||
+‏                           (playerChoice === "ورقة" && computerChoice === "حجر") ||
+‏                           (playerChoice === "مقص" && computerChoice === "ورقة")) {
+‏                    document.getElementById('rpsResult').textContent = `لقد فزت! الكمبيوتر اختار ${computerChoice}.`;
+‏                } else {
+‏                    document.getElementById('rpsResult').textContent = `لقد خسرت! الكمبيوتر اختار ${computerChoice}.`;
                 }
             };
         }
 
-        // لعبة الذاكرة
+        // لعبة الذاكرة (مبدئية)
+‏        function playMemoryGame() {
+‏            document.getElementById('gameArea').innerHTML = `
+                    // لعبة الذاكرة (مبدئية)
         function playMemoryGame() {
             document.getElementById('gameArea').innerHTML = `
                 <h2>لعبة الذاكرة</h2>
-                <p>لعبة بسيطة تحتاج تركيز. (يمكن تطويرها لاحقًا)</p>
+                <p>لعبة بسيطة تحتاج لتركيز! يمكنك تطويرها لاحقًا.</p>
             `;
         }
 
         // لعبة الأسئلة
         function playQuizGame() {
             const questions = [
-                { question: "ما هو عاصمة قطر؟", answer: "الدوحة" },
                 { question: "ما هو أكبر كوكب في النظام الشمسي؟", answer: "المشتري" },
-                { question: "كم عدد ألوان قوس قزح؟", answer: "7" }
+                { question: "كم عدد ألوان قوس قزح؟", answer: "7" },
+                { question: "من هو مخترع المصباح الكهربائي؟", answer: "توماس إديسون" },
+                { question: "ما هو الحيوان الأسرع في العالم؟", answer: "الفهد" },
+                { question: "ما هي اللغة الأكثر تحدثاً في العالم؟", answer: "الإنجليزية" },
+                { question: "ما هو العنصر الأساسي في الشمس؟", answer: "الهيدروجين" },
+                { question: "ما هو أعلى جبل في العالم؟", answer: "إيفرست" },
+                { question: "من هو مؤسس شركة مايكروسوفت؟", answer: "بيل غيتس" },
+                { question: "كم عدد عظام جسم الإنسان؟", answer: "206" },
+                { question: "ما هي عاصمة إيطاليا؟", answer: "روما" },
+                { question: "ما هو أكبر محيط في العالم؟", answer: "المحيط الهادئ" },
+                { question: "ما هو اسم الكوكب الأحمر؟", answer: "المريخ" },
+                { question: "كم عدد كواكب المجموعة الشمسية؟", answer: "8" },
+                { question: "ما هي أول دولة صنعت الشاي؟", answer: "الصين" },
+                { question: "من هو مكتشف أمريكا؟", answer: "كريستوفر كولومبوس" },
+                { question: "ما هي أول دولة عربية استضافت كأس العالم؟", answer: "قطر" },
+                { question: "ما هو أطول نهر في العالم؟", answer: "نهر النيل" },
+                { question: "ما هو الحيوان الذي لا يستطيع القفز؟", answer: "الفيل" },
+                { question: "ما هو أسرع طائر في العالم؟", answer: "الشاهين" },
+                { question: "ما هي الدولة التي اخترعت الإنترنت؟", answer: "الولايات المتحدة" }
             ];
             let currentQuestion = 0;
             document.getElementById('gameArea').innerHTML = `
@@ -129,7 +278,7 @@
             
             window.checkAnswer = function() {
                 let answer = document.getElementById('answerInput').value;
-                if (answer === questions[currentQuestion].answer) {
+                if (answer.toLowerCase() === questions[currentQuestion].answer.toLowerCase()) {
                     document.getElementById('quizFeedback').textContent = "إجابة صحيحة!";
                     currentQuestion++;
                     if (currentQuestion < questions.length) {
