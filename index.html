@@ -68,6 +68,10 @@
     <button onclick="showGame('ticTacToe')">لعبة إكس أو</button>
     <button onclick="showGame('numberGuess')">لعبة تخمين الرقم</button>
     <button onclick="showGame('fastClick')">لعبة العد السريع</button>
+    <button onclick="showGame('wordGuess')">لعبة تخمين الكلمة</button>
+    <button onclick="showGame('balanceGame')">لعبة التوازن</button>
+    <button onclick="showGame('puzzleGame')">لعبة الألغاز</button>
+    <button onclick="showGame('memoryGame')">لعبة مطابقة الصور</button>
 
     <!-- لعبة إكس أو -->
     <div id="ticTacToe" class="game-section">
@@ -75,7 +79,7 @@
         <p id="status">اختر نمط اللعب:</p>
         <button onclick="startLocalGame('friend')">اللعب مع صديق</button>
         <button onclick="startLocalGame('computer')">اللعب ضد الكمبيوتر</button>
-        <button onclick="alert('والله مالي خلق اسوي اللعب اونلاين بس انتظروا لين يصير لي خلق')">اللعب أونلاين</button>
+        <button onclick="alert('والله مالي خلق اسوي العب اونلاين بس انتظروا لين يصير لي خلق')">اللعب أونلاين</button>
 
         <div id="gameArea">
             <div class="board" id="board">
@@ -114,32 +118,76 @@
         <button onclick="resetCountGame()">إعادة اللعب</button>
     </div>
 
+    <!-- لعبة تخمين الكلمة -->
+    <div id="wordGuess" class="game-section">
+        <h2>لعبة تخمين الكلمة</h2>
+        <p id="wordStatus">تخمين الكلمة (5 أحرف)</p>
+        <input type="text" id="wordInput" maxlength="5" placeholder="أدخل كلمتك">
+        <button onclick="submitWordGuess()">إرسال التخمين</button>
+        <p id="wordMessage"></p>
+        <button onclick="resetWordGuess()">إعادة اللعب</button>
+    </div>
+
+    <!-- لعبة التوازن -->
+    <div id="balanceGame" class="game-section">
+        <h2>لعبة التوازن</h2>
+        <p id="balanceStatus">حاول أن تضرب الكرة على العارضة!</p>
+        <button id="throwButton" onclick="throwBall()">ارمي الكرة!</button>
+        <p id="balanceMessage"></p>
+        <button onclick="resetBalanceGame()">إعادة اللعب</button>
+    </div>
+
+    <!-- لعبة الألغاز -->
+    <div id="puzzleGame" class="game-section">
+        <h2>لعبة الألغاز</h2>
+        <p id="puzzleStatus">رتب الصور!</p>
+        <div class="board" id="puzzleBoard">
+            <!-- صور مفقودة تحتاج إلى ترتيب -->
+        </div>
+        <button onclick="resetPuzzleGame()">إعادة اللعب</button>
+    </div>
+
+    <!-- لعبة مطابقة الصور -->
+    <div id="memoryGame" class="game-section">
+        <h2>لعبة مطابقة الصور</h2>
+        <p id="memoryStatus">مطابقة الصور!</p>
+        <div class="board" id="memoryBoard">
+            <!-- بطاقات الصور تحتاج إلى مطابقة -->
+        </div>
+        <button onclick="resetMemoryGame()">إعادة اللعب</button>
+    </div>
+
     <audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
     <audio id="laughSound" src="https://www.soundjay.com/human/sounds/laugh-4.mp3" preload="auto"></audio>
 
     <script>
-        // متغيرات لعبة إكس أو
-        let board, currentPlayer, gameMode, isOnlineGame = false, playerSymbol = 'X';
-        const boardCells = document.querySelectorAll('.cell');
+        // المتغيرات العامة
+        let targetNumber, guessAttempts, countClicks, timeLeft;
+        const maxGuessAttempts = 3;
+        const maxClicks = 50;
+        let countTimer, countdownTimer;
 
+        // لعبة إكس أو
         function showGame(gameId) {
             document.querySelectorAll('.game-section').forEach(game => game.classList.remove('active'));
             document.getElementById(gameId).classList.add('active');
-            if (gameId === 'ticTacToe') {
-                resetGame();
-            } else if (gameId === 'numberGuess') {
-                resetGuessGame();
-            } else if (gameId === 'fastClick') {
-                resetCountGame();
-            }
+            if (gameId === 'ticTacToe') resetGame();
+            if (gameId === 'numberGuess') resetGuessGame();
+            if (gameId === 'fastClick') resetCountGame();
+            if (gameId === 'wordGuess') resetWordGuess();
+            if (gameId === 'balanceGame') resetBalanceGame();
+            if (gameId === 'puzzleGame') resetPuzzleGame();
+            if (gameId === 'memoryGame') resetMemoryGame();
         }
 
         // لعبة إكس أو
+        let board, currentPlayer, gameMode;
+        const boardCells = document.querySelectorAll('.cell');
+
         function startLocalGame(mode) {
             gameMode = mode;
             currentPlayer = 'X';
             board = Array(9).fill(null);
-            isOnlineGame = false;
             document.getElementById('status').textContent = `اللاعب ${currentPlayer} يبدأ`;
             document.getElementById('gameArea').style.display = 'block';
             updateBoard();
@@ -151,7 +199,6 @@
                 cell.onclick = () => handleMove(index);
             });
         }
-
         function handleMove(index) {
             if (!board[index] && !isOnlineGame) {
                 board[index] = currentPlayer;
@@ -197,9 +244,6 @@
         }
 
         // لعبة تخمين الرقم
-        let targetNumber, guessAttempts = 0;
-        const maxGuessAttempts = 3;
-
         function resetGuessGame() {
             targetNumber = Math.floor(Math.random() * 50) + 1;
             guessAttempts = 0;
@@ -222,12 +266,6 @@
         }
 
         // لعبة العد السريع
-        let countClicks = 0;
-        const maxClicks = 50;
-        let countTimer;
-        let countdownTimer;
-        let timeLeft = 30;
-
         function startCountGame() {
             countClicks = 0;
             timeLeft = 30;
@@ -274,6 +312,55 @@
             document.getElementById('countdownTimer').textContent = '30';
             countClicks = 0;
             timeLeft = 30;
+        }
+
+        // لعبة تخمين الكلمة
+        const words = ["تفاح", "موز", "برتقال", "عنب", "بطيخ"];
+        let selectedWord;
+
+        function resetWordGuess() {
+            selectedWord = words[Math.floor(Math.random() * words.length)];
+            document.getElementById('wordMessage').textContent = '';
+            document.getElementById('wordInput').value = '';
+        }
+
+        function submitWordGuess() {
+            const userGuess = document.getElementById('wordInput').value;
+            if (userGuess === selectedWord) {
+                playClapSound();
+                document.getElementById('wordMessage').textContent = `أحسنت! الكلمة الصحيحة هي: ${selectedWord}`;
+            } else {
+                playLaughSound();
+                document.getElementById('wordMessage').textContent = `خسرت! حاول مرة أخرى.`;
+            }
+        }
+
+        // لعبة التوازن
+        function resetBalanceGame() {
+            document.getElementById('balanceMessage').textContent = '';
+        }
+
+        function throwBall() {
+            const randomOutcome = Math.random();
+            if (randomOutcome > 0.5) {
+                playClapSound();
+                document.getElementById('balanceMessage').textContent = `نجحت في رمي الكرة!`;
+            } else {
+                playLaughSound();
+                document.getElementById('balanceMessage').textContent = `فشلت في رمي الكرة.`;
+            }
+        }
+
+        // لعبة الألغاز
+        function resetPuzzleGame() {
+            document.getElementById('puzzleBoard').innerHTML = ''; // امسح المحتوى
+            // أضف المنطق لإنشاء اللغز هنا
+        }
+
+        // لعبة مطابقة الصور
+        function resetMemoryGame() {
+            document.getElementById('memoryBoard').innerHTML = ''; // امسح المحتوى
+            // أضف المنطق لإنشاء لعبة المطابقة هنا
         }
 
         // صوتيات
