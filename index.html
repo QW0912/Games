@@ -12,6 +12,12 @@
         }
         h1 {
             color: #ff4500;
+            display: inline;
+        }
+        .timer {
+            display: inline;
+            font-size: 1.2rem;
+            color: #ff4500;
         }
         .board {
             display: grid;
@@ -65,34 +71,23 @@
         <button onclick="resetGame()">إعادة اللعب</button>
     </div>
 
- <div class="game-section">
-    <h1>لعبة تخمين الرقم</h1>
-    <p id="guessStatus">حاول تخمين الرقم من 1 إلى 50 (ثلاث محاولات فقط)</p>
-    <div id="guessGameArea">
-        <input type="number" id="guessInput" placeholder="أدخل رقم من 1 إلى 50">
-        <button onclick="submitGuess()">إرسال التخمين</button>
-        <p id="guessMessage"></p>
-        <button onclick="resetGuessGame()">إعادة اللعب</button>
-    </div>
-</div>
+    <div class="game-section">
+        <h1>لعبة تخمين الرقم</h1>
+        <p id="guessStatus">حاول تخمين الرقم من 1 إلى 50 (ثلاث محاولات فقط)</p>
+        <div id="guessGameArea">
+            <input type="number" id="guessInput" placeholder="أدخل رقم من 1 إلى 50" min="1" max="50">
+            <button onclick="submitGuess()">إرسال التخمين</button>
+            <p id="guessMessage"></p>
+            <button onclick="resetGuessGame()">إعادة اللعب</button>
+        </div>
     </div>
 
     <div class="game-section">
-        <h1>العد السريع</h1>
-        <p id="countStatus">اضغط على الزر بأسرع وقت ممكن لتحقيق 50 نقرة! لديك 30 ثانية</p>
+        <h1>العد السريع <span class="timer" id="countdownTimer">30</span> ثانية</h1>
+        <p id="countStatus">اضغط على الزر بأسرع وقت ممكن لتحقيق 50 نقرة!</p>
         <button id="countButton" onclick="startCountGame()">ابدأ العد</button>
         <p id="countMessage"></p>
         <button onclick="resetCountGame()">إعادة اللعب</button>
-    </div>
-
-    <div class="game-section">
-        <h1>لعبة الرياضيات السريعة</h1>
-        <p>حل أكبر عدد من المسائل الحسابية في 30 ثانية!</p>
-        <p id="mathQuestion"></p>
-        <input type="number" id="mathInput" placeholder="أدخل الإجابة">
-        <button onclick="submitMathAnswer()">إرسال الإجابة</button>
-        <p id="mathMessage"></p>
-        <button onclick="resetMathGame()">إعادة اللعب</button>
     </div>
 
     <audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
@@ -173,128 +168,95 @@
             document.getElementById('laughSound').play();
         }
 
-        // لعبة تخمين الرقم// لعبة تخمين الرقم
-let targetNumber;
-let guessAttempts = 0;
-const maxGuessAttempts = 3;
+        // لعبة تخمين الرقم
+        let targetNumber;
+        let guessAttempts = 0;
+        const maxGuessAttempts = 3;
 
-function startGuessGame() {
-    targetNumber = Math.floor(Math.random() * 50) + 1; // تم تغيير النطاق إلى 50
-    guessAttempts = 0;
-    document.getElementById('guessMessage').textContent = '';
-    document.getElementById('guessInput').value = '';
-}
+        function startGuessGame() {
+            targetNumber = Math.floor(Math.random() * 50) + 1; // الأرقام فقط من 1 إلى 50
+            guessAttempts = 0;
+            document.getElementById('guessMessage').textContent = '';
+            document.getElementById('guessInput').value = '';
+        }
 
-function submitGuess() {
-    let guess = Number(document.getElementById('guessInput').value);
-    guessAttempts++;
-    if (guess === targetNumber) {
-        playClapSound();
-        document.getElementById('guessMessage').textContent = `أحسنت! لقد خمنت الرقم الصحيح: ${targetNumber}`;
-    } else if (guessAttempts >= maxGuessAttempts) {
-        playLaughSound();
-        document.getElementById('guessMessage').textContent = `خسرت! الرقم الصحيح كان: ${targetNumber}`;
-    } else {
-        document.getElementById('guessMessage').textContent = guess > targetNumber ? 'الرقم أقل!' : 'الرقم أكبر!';
-    }
-}
+        function submitGuess() {
+            let guess = Number(document.getElementById('guessInput').value);
+            if (guess < 1 || guess > 50) {
+                document.getElementById('guessMessage').textContent = 'من فضلك، أدخل رقمًا بين 1 و 50';
+                return;
+            }
+            guessAttempts++;
+            if (guess === targetNumber) {
+                playClapSound();
+                document.getElementById('guessMessage').textContent = `أحسنت! لقد خمنت الرقم الصحيح: ${targetNumber}`;
+            } else if (guessAttempts >= maxGuessAttempts) {
+                playLaughSound();
+                document.getElementById('guessMessage').textContent = `خسرت! الرقم الصحيح كان: ${targetNumber}`;
+            } else {
+                document.getElementById('guessMessage').textContent = guess > targetNumber ? 'الرقم أقل!' : 'الرقم أكبر!';
+            }
+        }
 
-function resetGuessGame() {
-    startGuessGame();
-}
+        function resetGuessGame() {
+            startGuessGame();
+        }
 
         // لعبة العد السريع
         let countClicks = 0;
-const maxClicks = 50;
-let countTimer;
-let countdownTimer;
-let timeLeft = 30;
+        const maxClicks = 50;
+        let countTimer;
+        let countdownTimer;
+        let timeLeft = 30;
 
-function startCountGame() {
-    countClicks = 0;
-    timeLeft = 30;
-    countdownTimer = setInterval(updateTimer, 1000);
-    countTimer = setTimeout(endCountGame, 30000); // مؤقت 30 ثانية
-    document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
-    document.getElementById('countButton').onclick = countClick;
-    document.getElementById('countMessage').textContent = '';
-}
-
-function countClick() {
-    countClicks++;
-    document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
-    if (countClicks >= maxClicks) {
-        clearTimeout(countTimer);
-        clearInterval(countdownTimer);
-        playClapSound();
-        document.getElementById('countMessage').textContent = `أحسنت! وصلت إلى 50 نقرة!`;
-        document.getElementById('countButton').onclick = null;
-    }
-}
-
-function updateTimer() {
-    timeLeft--;
-    document.getElementById('countdownTimer').textContent = timeLeft;
-    if (timeLeft <= 0) {
-        clearInterval(countdownTimer);
-    }
-}
-
-function endCountGame() {
-    if (countClicks < maxClicks) {
-        playLaughSound();
-        document.getElementById('countMessage').textContent = `انتهى الوقت! لم تصل إلى 50 نقرة.`;
-        document.getElementById('countButton').onclick = null;
-    }
-}
-
-function resetCountGame() {
-    clearTimeout(countTimer);
-    clearInterval(countdownTimer);
-    document.getElementById('countButton').textContent = "ابد
-
-        // لعبة الرياضيات السريعة
-        let mathTimer;
-        let mathScore = 0;
-
-        function startMathGame() {
-            mathScore = 0;
-            document.getElementById('mathMessage').textContent = '';
-            generateMathQuestion();
-            mathTimer = setTimeout(endMathGame, 30000); // مؤقت 30 ثانية
+        function startCountGame() {
+            countClicks = 0;
+            timeLeft = 30;
+            countdownTimer = setInterval(updateTimer, 1000);
+            countTimer = setTimeout(endCountGame, 30000); // مؤقت 30 ثانية
+            document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
+            document.getElementById('countButton').onclick = countClick;
+            document.getElementById('countMessage').textContent = '';
         }
 
-        function generateMathQuestion() {
-            let num1 = Math.floor(Math.random() * 10) + 1;
-            let num2 = Math.floor(Math.random() * 10) + 1;
-            document.getElementById('mathQuestion').textContent = `${num1} + ${num2} = ?`;
-            return num1 + num2;
-        }
-
-        function submitMathAnswer() {
-            let answer = Number(document.getElementById('mathInput').value);
-            let correctAnswer = generateMathQuestion();
-            if (answer === correctAnswer) {
-                mathScore++;
-                document.getElementById('mathMessage').textContent = `إجابة صحيحة! نقاطك: ${mathScore}`;
-            } else {
-                document.getElementById('mathMessage').textContent = `إجابة خاطئة! حاول مرة أخرى.`;
+        function countClick() {
+            countClicks++;
+            document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
+            if (countClicks >= maxClicks) {
+                clearTimeout(countTimer);
+                clearInterval(countdownTimer);
+                playClapSound();
+                document.getElementById('countMessage').textContent = `أحسنت! وصلت إلى 50 نقرة!`;
+                document.getElementById('countButton').onclick = null;
             }
-            document.getElementById('mathInput').value = '';
-            generateMathQuestion();
         }
 
-        function endMathGame() {
-            playClapSound();
-            document.getElementById('mathMessage').textContent = `انتهى الوقت! نقاطك: ${mathScore}`;
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById('countdownTimer').textContent = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(countdownTimer);
+            }
         }
 
-        function resetMathGame() {
-            clearTimeout(mathTimer);
-            document.getElementById('mathQuestion').textContent = '';
-            document.getElementById('mathMessage').textContent = '';
-            document.getElementById('mathInput').value = '';
+        function endCountGame() {
+            if (countClicks < maxClicks) {
+                playLaughSound();
+                document.getElementById('countMessage').textContent = `انتهى الوقت! لم تصل إلى 50 نقرة.`;
+                document.getElementById('countButton').onclick = null;
+            }
+        }
+
+        function resetCountGame() {
+            clearTimeout(countTimer);
+            clearInterval(countdownTimer);
+            document.getElementById('countButton').textContent = "ابدأ العد";
+            document.getElementById('countMessage').textContent = '';
+            document.getElementById('countdownTimer').textContent = '30';
+            countClicks = 0;
+            timeLeft = 30;
         }
     </script>
 </body>
 </html>
+            
