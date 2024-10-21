@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مجموعة ألعاب ممتعة - لعبة إكس أو أونلاين</title>
+    <title>مجموعة ألعاب ممتعة</title>
     <style>
         body {
             font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -12,6 +12,16 @@
         }
         h1 {
             color: #ff4500;
+        }
+        .game-section {
+            display: none;
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #ffebcd;
+            border-radius: 15px;
+        }
+        .active {
+            display: block;
         }
         .board {
             display: grid;
@@ -30,7 +40,6 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            background-color: #f5f5dc;
         }
         button {
             margin: 10px;
@@ -46,12 +55,6 @@
         button:hover {
             background-color: #ff4500;
         }
-        .game-section {
-            margin-top: 50px;
-            padding: 20px;
-            background-color: #ffebcd;
-            border-radius: 15px;
-        }
         .timer {
             display: inline;
             font-size: 1.2rem;
@@ -60,23 +63,39 @@
     </style>
 </head>
 <body>
-    <h1>لعبة إكس أو أونلاين</h1>
-    <p id="status">انتظار اللاعبين...</p>
-    <div class="board" id="board">
-        <div class="cell" data-index="0"></div>
-        <div class="cell" data-index="1"></div>
-        <div class="cell" data-index="2"></div>
-        <div class="cell" data-index="3"></div>
-        <div class="cell" data-index="4"></div>
-        <div class="cell" data-index="5"></div>
-        <div class="cell" data-index="6"></div>
-        <div class="cell" data-index="7"></div>
-        <div class="cell" data-index="8"></div>
-    </div>
-    <button onclick="resetGame()">إعادة اللعبة</button>
+    <h1>مجموعة ألعاب ممتعة</h1>
+    <p>اختر اللعبة:</p>
+    <button onclick="showGame('ticTacToe')">لعبة إكس أو</button>
+    <button onclick="showGame('numberGuess')">لعبة تخمين الرقم</button>
+    <button onclick="showGame('fastClick')">لعبة العد السريع</button>
 
-    <div class="game-section">
-        <h1>لعبة تخمين الرقم</h1>
+    <!-- لعبة إكس أو -->
+    <div id="ticTacToe" class="game-section">
+        <h2>لعبة إكس أو</h2>
+        <p id="status">اختر نمط اللعب:</p>
+        <button onclick="startLocalGame('friend')">اللعب مع صديق</button>
+        <button onclick="startLocalGame('computer')">اللعب ضد الكمبيوتر</button>
+        <button onclick="startOnlineGame()">اللعب أونلاين</button>
+
+        <div id="gameArea">
+            <div class="board" id="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+            <button onclick="resetGame()">إعادة اللعب</button>
+        </div>
+    </div>
+
+    <!-- لعبة تخمين الرقم -->
+    <div id="numberGuess" class="game-section">
+        <h2>لعبة تخمين الرقم</h2>
         <p id="guessStatus">حاول تخمين الرقم من 1 إلى 50 (ثلاث محاولات فقط)</p>
         <div id="guessGameArea">
             <input type="number" id="guessInput" placeholder="أدخل رقم من 1 إلى 50" min="1" max="50">
@@ -86,8 +105,9 @@
         </div>
     </div>
 
-    <div class="game-section">
-        <h1>العد السريع <span class="timer" id="countdownTimer">30</span> ثانية</h1>
+    <!-- لعبة العد السريع -->
+    <div id="fastClick" class="game-section">
+        <h2>العد السريع <span class="timer" id="countdownTimer">30</span> ثانية</h2>
         <p id="countStatus">اضغط على الزر بأسرع وقت ممكن لتحقيق 50 نقرة!</p>
         <button id="countButton" onclick="startCountGame()">ابدأ العد</button>
         <p id="countMessage"></p>
@@ -99,62 +119,109 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
-
-        // لعبة إكس أو
-        let player = {};
-        let currentPlayer = 'X';
+        let board, currentPlayer, gameMode, isOnlineGame = false, playerSymbol = 'X';
         const boardCells = document.querySelectorAll('.cell');
 
-        // انضمام اللاعب إلى اللعبة
-        const playerName = prompt('أدخل اسمك للانضمام إلى اللعبة:');
-        socket.emit('joinGame', playerName);
+        // تبديل عرض الألعاب
+        function showGame(gameId) {
+            document.querySelectorAll('.game-section').forEach(game => game.classList.remove('active'));
+            document.getElementById(gameId).classList.add('active');
+        }
 
-        socket.on('playerData', (data) => {
-            player = data;
-            document.getElementById('status').textContent = `مرحبًا ${player.name}! أنت اللاعب ${player.symbol}`;
-        });
+        // لعبة إكس أو
+        function startLocalGame(mode) {
+            gameMode = mode;
+            currentPlayer = 'X';
+            board = Array(9).fill(null);
+            isOnlineGame = false;
+            document.getElementById('status').textContent = `اللاعب ${currentPlayer} يبدأ`;
+            document.getElementById('gameArea').style.display = 'block';
+            updateBoard();
+        }
 
-        // تحديث لوحة اللعبة عند استقبال حركة
-        socket.on('updateBoard', (newBoard) => {
-            newBoard.forEach((cell, index) => {
-                boardCells[index].textContent = cell;
+        function startOnlineGame() {
+            isOnlineGame = true;
+            const playerName = prompt('أدخل اسمك للانضمام إلى اللعبة:');
+            socket.emit('joinGame', playerName);
+        }
+
+        function updateBoard() {
+            boardCells.forEach((cell, index) => {
+                cell.textContent = board[index];
+                cell.addEventListener('click', () => handleMove(index));
             });
+        }
+
+        function handleMove(index) {
+            if (!board[index] && (!isOnlineGame || currentPlayer === playerSymbol)) {
+                board[index] = currentPlayer;
+                updateBoard();
+                if (checkWin()) {
+                    document.getElementById('status').textContent = `اللاعب ${currentPlayer} فاز!`;
+                } else if (board.every(cell => cell)) {
+                    document.getElementById('status').textContent = 'تعادل!';
+                } else {
+                    switchTurn();
+                    if (gameMode === 'computer' && currentPlayer === 'O' && !isOnlineGame) {
+                        computerMove();
+                    }
+                }
+            }
+        }
+
+        function switchTurn() {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            document.getElementById('status').textContent = `اللاعب ${currentPlayer} يلعب الآن`;
+        }
+
+        function computerMove() {
+            let availableCells = board.map((cell, index) => cell === null ? index : null).filter(index => index !== null);
+            let randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
+            handleMove(randomCell);
+        }
+
+        function checkWin() {
+            const winningCombinations = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+                [0, 4, 8], [2, 4, 6]  // Diagonals
+            ];
+            return winningCombinations.some(combination => 
+                combination.every(index => board[index] === currentPlayer)
+            );
+        }
+
+        function resetGame() {
+            startLocalGame(gameMode);
+        }
+
+        const socket = io();
+        socket.on('playerData', (data) => {
+            playerSymbol = data.symbol;
+            document.getElementById('status').textContent = `مرحبًا ${data.name}! أنت اللاعب ${playerSymbol}`;
         });
 
-        // تحريك الدور إلى اللاعب الآخر
+        socket.on('updateBoard', (newBoard) => {
+            board = newBoard;
+            updateBoard();
+        });
+
         socket.on('playerTurn', (nextPlayer) => {
             currentPlayer = nextPlayer;
             document.getElementById('status').textContent = `اللاعب ${currentPlayer} يلعب الآن`;
         });
 
-        // معالجة الحركات
-        boardCells.forEach(cell => {
-            cell.addEventListener('click', () => {
-                const index = cell.getAttribute('data-index');
-                if (cell.textContent === '' && player.symbol === currentPlayer) {
-                    socket.emit('makeMove', { index });
-                }
-            });
+        socket.on('resetGame', () => {
+            board = Array(9).fill(null);
+            updateBoard();
         });
-
-        // إعادة ضبط اللعبة
-        socket.on('resetGame', (message) => {
-            boardCells.forEach(cell => cell.textContent = '');
-            document.getElementById('status').textContent = message;
-        });
-
-        function resetGame() {
-            socket.emit('resetGame', 'تم إعادة اللعبة');
-        }
 
         // لعبة تخمين الرقم
-        let targetNumber;
-        let guessAttempts = 0;
+        let targetNumber, guessAttempts = 0;
         const maxGuessAttempts = 3;
 
         function startGuessGame() {
-            targetNumber = Math.floor(Math.random() * 50) + 1; // الأرقام فقط من 1 إلى 50
+            targetNumber = Math.floor(Math.random() * 50) + 1;
             guessAttempts = 0;
             document.getElementById('guessMessage').textContent = '';
             document.getElementById('guessInput').value = '';
@@ -162,10 +229,6 @@
 
         function submitGuess() {
             let guess = Number(document.getElementById('guessInput').value);
-            if (guess < 1 || guess > 50) {
-                document.getElementById('guessMessage').textContent = 'من فضلك، أدخل رقمًا بين 1 و 50';
-                return;
-            }
             guessAttempts++;
             if (guess === targetNumber) {
                 playClapSound();
@@ -222,7 +285,7 @@
         function endCountGame() {
             if (countClicks < maxClicks) {
                 playLaughSound();
-                document.getElementById('countMessage').textContent = `                50 نقرة.`;
+                document.getElementById('countMessage').textContent = `انتهى الوقت! لم تصل إلى 50 نقرة.`;
                 document.getElementById('countButton').onclick = null;
             }
         }
@@ -237,6 +300,7 @@
             timeLeft = 30;
         }
 
+        // صوتيات
         function playClapSound() {
             document.getElementById('clapSound').play();
         }
@@ -246,4 +310,4 @@
         }
     </script>
 </body>
-</html>انتهى الوقت! لم تصل إلى
+</html>
