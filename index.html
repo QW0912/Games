@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مجموعة ألعاب ممتعة</title>
+    <title>مجموعة ألعاب ممتعة - لعبة إكس أو أونلاين</title>
     <style>
         body {
             font-family: 'Comic Sans MS', cursive, sans-serif;
@@ -11,12 +11,6 @@
             background-color: #f0e68c;
         }
         h1 {
-            color: #ff4500;
-            display: inline;
-        }
-        .timer {
-            display: inline;
-            font-size: 1.2rem;
             color: #ff4500;
         }
         .board {
@@ -58,18 +52,28 @@
             background-color: #ffebcd;
             border-radius: 15px;
         }
+        .timer {
+            display: inline;
+            font-size: 1.2rem;
+            color: #ff4500;
+        }
     </style>
 </head>
 <body>
-    <h1>لعبة إكس أو</h1>
-    <p id="status">اختر نمط اللعب: </p>
-    <button onclick="startGame('friend')">اللعب ضد صديق</button>
-    <button onclick="startGame('computer')">اللعب ضد الكمبيوتر</button>
-    
-    <div id="gameArea" style="display: none;">
-        <div class="board" id="board"></div>
-        <button onclick="resetGame()">إعادة اللعب</button>
+    <h1>لعبة إكس أو أونلاين</h1>
+    <p id="status">انتظار اللاعبين...</p>
+    <div class="board" id="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
     </div>
+    <button onclick="resetGame()">إعادة اللعبة</button>
 
     <div class="game-section">
         <h1>لعبة تخمين الرقم</h1>
@@ -93,79 +97,55 @@
     <audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
     <audio id="laughSound" src="https://www.soundjay.com/human/sounds/laugh-4.mp3" preload="auto"></audio>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
+        const socket = io();
+
         // لعبة إكس أو
-        let board;
-        let currentPlayer;
-        let gameMode;
-        let rounds = 0;
-        let playerWins = { X: 0, O: 0 };
-        const winningCombinations = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-            [0, 4, 8], [2, 4, 6] // Diagonals
-        ];
+        let player = {};
+        let currentPlayer = 'X';
+        const boardCells = document.querySelectorAll('.cell');
 
-        function startGame(mode) {
-            gameMode = mode;
-            currentPlayer = 'X';
-            board = Array(9).fill(null);
-            rounds = 0;
-            document.getElementById('status').textContent = `اللاعب ${currentPlayer} يبدأ`;
-            document.getElementById('gameArea').style.display = 'block';
-            document.getElementById('board').innerHTML = board.map((_, index) => `<div class="cell" onclick="handleClick(${index})"></div>`).join('');
-        }
+        // انضمام اللاعب إلى اللعبة
+        const playerName = prompt('أدخل اسمك للانضمام إلى اللعبة:');
+        socket.emit('joinGame', playerName);
 
-        function handleClick(index) {
-            if (!board[index]) {
-                board[index] = currentPlayer;
-                document.getElementById('board').children[index].textContent = currentPlayer;
-                if (checkWin()) {
-                    playerWins[currentPlayer]++;
-                    rounds++;
-                    playClapSound();
-                    document.getElementById('status').textContent = `اللاعب ${currentPlayer} فاز!`;
-                    if (rounds >= 3) {
-                        document.getElementById('status').textContent = `اللعبة انتهت! الفائز: ${currentPlayer}`;
-                    }
-                } else if (board.every(cell => cell)) {
-                    rounds++;
-                    document.getElementById('status').textContent = "تعادل!";
-                    if (rounds >= 3) {
-                        document.getElementById('status').textContent = `اللعبة انتهت!`;
-                    }
-                } else {
-                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-                    document.getElementById('status').textContent = `اللاعب ${currentPlayer} يلعب الآن`;
-                    if (gameMode === 'computer' && currentPlayer === 'O') {
-                        computerMove();
-                    }
+        socket.on('playerData', (data) => {
+            player = data;
+            document.getElementById('status').textContent = `مرحبًا ${player.name}! أنت اللاعب ${player.symbol}`;
+        });
+
+        // تحديث لوحة اللعبة عند استقبال حركة
+        socket.on('updateBoard', (newBoard) => {
+            newBoard.forEach((cell, index) => {
+                boardCells[index].textContent = cell;
+            });
+        });
+
+        // تحريك الدور إلى اللاعب الآخر
+        socket.on('playerTurn', (nextPlayer) => {
+            currentPlayer = nextPlayer;
+            document.getElementById('status').textContent = `اللاعب ${currentPlayer} يلعب الآن`;
+        });
+
+        // معالجة الحركات
+        boardCells.forEach(cell => {
+            cell.addEventListener('click', () => {
+                const index = cell.getAttribute('data-index');
+                if (cell.textContent === '' && player.symbol === currentPlayer) {
+                    socket.emit('makeMove', { index });
                 }
-            }
-        }
+            });
+        });
 
-        function computerMove() {
-            let availableCells = board.map((cell, index) => cell === null ? index : null).filter(index => index !== null);
-            let randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
-            handleClick(randomCell);
-        }
-
-        function checkWin() {
-            return winningCombinations.some(combination => 
-                combination.every(index => board[index] === currentPlayer)
-            );
-        }
+        // إعادة ضبط اللعبة
+        socket.on('resetGame', (message) => {
+            boardCells.forEach(cell => cell.textContent = '');
+            document.getElementById('status').textContent = message;
+        });
 
         function resetGame() {
-            startGame(gameMode);
-        }
-
-        function playClapSound() {
-            document.getElementById('clapSound').play();
-        }
-
-        function playLaughSound() {
-            document.getElementById('laughSound').play();
+            socket.emit('resetGame', 'تم إعادة اللعبة');
         }
 
         // لعبة تخمين الرقم
@@ -242,7 +222,7 @@
         function endCountGame() {
             if (countClicks < maxClicks) {
                 playLaughSound();
-                document.getElementById('countMessage').textContent = `انتهى الوقت! لم تصل إلى 50 نقرة.`;
+                document.getElementById('countMessage').textContent = `                50 نقرة.`;
                 document.getElementById('countButton').onclick = null;
             }
         }
@@ -256,7 +236,14 @@
             countClicks = 0;
             timeLeft = 30;
         }
+
+        function playClapSound() {
+            document.getElementById('clapSound').play();
+        }
+
+        function playLaughSound() {
+            document.getElementById('laughSound').play();
+        }
     </script>
 </body>
-</html>
-            
+</html>انتهى الوقت! لم تصل إلى
