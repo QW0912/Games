@@ -79,6 +79,10 @@
             left: 40px;
             transition: transform 0.5s;
         }
+        .win-message {
+            font-size: 3rem; /* زيادة حجم الخط عند الفوز */
+            color: green;
+        }
     </style>
 </head>
 <body>
@@ -150,10 +154,11 @@
     <!-- لعبة الحظ -->
     <div id="luckGame" class="game-section">
         <h2>لعبة الحظ</h2>
-        <p id="luckStatus">حاول أن تدخل الكره داخل المربع اللازرق !</p>
+        <p id="luckStatus">حاول أن تدخل الكره داخل المربع اللازرق!</p>
         <div id="goal"><div id="ball"></div></div>
         <button id="throwButton" onclick="throwBall()">ارمي الكرة!</button>
         <p id="luckMessage"></p>
+        <p id="finalMessage" class="win-message"></p>
         <button onclick="resetLuckGame()">إعادة اللعب</button>
     </div>
 
@@ -214,7 +219,7 @@
         }
 
         function handleMove(index) {
-            if (!board[index] && !isOnlineGame) {
+            if (!board[index]) {
                 board[index] = currentPlayer;
                 updateBoard();
                 if (checkWin()) {
@@ -366,6 +371,7 @@
 
         function resetLuckGame() {
             document.getElementById('luckMessage').textContent = '';
+            document.getElementById('finalMessage').textContent = '';
             document.getElementById('ball').style.transform = 'translate(0px, 0px)';
             goalsScored = 0;
             luckAttempts = 3;
@@ -388,7 +394,7 @@
                     document.getElementById('luckMessage').textContent = `لم تدخل الكرة.`;
                 }
                 if (goalsScored >= 2) {
-                    document.getElementById('luckMessage').textContent = `فزت! الأهداف: ${goalsScored}`;
+                    document.getElementById('finalMessage').textContent = `فزت! الأهداف: ${goalsScored}`;
                     document.getElementById('throwButton').disabled = true; // تعطيل الزر عند الفوز
                 }
                 if (luckAttempts === 0 && goalsScored < 2) {
