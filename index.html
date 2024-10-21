@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة إكس أو</title>
+    <title>لعبة إكس أو وتخمين الرقم</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -33,6 +33,9 @@
             padding: 10px 20px;
             font-size: 1rem;
         }
+        .game-section {
+            margin-top: 50px;
+        }
     </style>
 </head>
 <body>
@@ -46,9 +49,24 @@
         <button onclick="resetGame()">إعادة اللعب</button>
     </div>
 
+    <div class="game-section">
+        <h1>لعبة تخمين الرقم</h1>
+        <p id="guessStatus">اختر نمط اللعب: </p>
+        <button onclick="startGuessGame('friend')">اللعب ضد صديق</button>
+        <button onclick="startGuessGame('computer')">اللعب ضد الكمبيوتر</button>
+        
+        <div id="guessGameArea" style="display: none;">
+            <input type="number" id="guessInput" placeholder="أدخل رقم من 1 إلى 10">
+            <button onclick="submitGuess()">إرسال التخمين</button>
+            <p id="guessMessage"></p>
+            <button onclick="resetGuessGame()">إعادة اللعب</button>
+        </div>
+    </div>
+
     <audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
 
     <script>
+        // لعبة إكس أو
         let board;
         let currentPlayer;
         let gameMode;
@@ -131,6 +149,43 @@
 
         function playClapSound() {
             document.getElementById('clapSound').play();
+        }
+
+        // لعبة تخمين الرقم
+        let targetNumber;
+        let guessMode;
+        let guessRounds = 0;
+
+        function startGuessGame(mode) {
+            guessMode = mode;
+            targetNumber = Math.floor(Math.random() * 10) + 1;
+            guessRounds = 0;
+            document.getElementById('guessStatus').textContent = `ابدأ التخمين!`;
+            document.getElementById('guessGameArea').style.display = 'block';
+        }
+
+        function submitGuess() {
+            let guess = Number(document.getElementById('guessInput').value);
+            if (guess === targetNumber) {
+                guessRounds++;
+                playClapSound();
+                document.getElementById('guessMessage').textContent = `أحسنت! لقد خمنت الرقم الصحيح: ${targetNumber}`;
+                if (guessRounds < 3) {
+                    setTimeout(resetGuessGame, 2000);
+                } else {
+                    document.getElementById('guessMessage').textContent = `اللعبة انتهت!`;
+                    guessRounds = 0;
+                }
+            } else {
+                document.getElementById('guessMessage').textContent = guess > targetNumber ? 'الرقم أقل!' : 'الرقم أكبر!';
+            }
+        }
+
+        function resetGuessGame() {
+            targetNumber = Math.floor(Math.random() * 10) + 1;
+            document.getElementById('guessMessage').textContent = '';
+            document.getElementById('guessInput').value = '';
+            document.getElementById('guessStatus').textContent = 'ابدأ الجولة الجديدة!';
         }
     </script>
 </body>
