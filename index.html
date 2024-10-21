@@ -77,11 +77,21 @@
     </div>
 
     <div class="game-section">
-        <h1>لعبة جديدة: العد السريع</h1>
-        <p id="countStatus">اضغط على الزر بأسرع وقت ممكن! (ثلاث محاولات)</p>
+        <h1>العد السريع</h1>
+        <p id="countStatus">اضغط على الزر بأسرع وقت ممكن لتحقيق 50 نقرة! لديك 30 ثانية</p>
         <button id="countButton" onclick="startCountGame()">ابدأ العد</button>
         <p id="countMessage"></p>
         <button onclick="resetCountGame()">إعادة اللعب</button>
+    </div>
+
+    <div class="game-section">
+        <h1>لعبة الرياضيات السريعة</h1>
+        <p>حل أكبر عدد من المسائل الحسابية في 30 ثانية!</p>
+        <p id="mathQuestion"></p>
+        <input type="number" id="mathInput" placeholder="أدخل الإجابة">
+        <button onclick="submitMathAnswer()">إرسال الإجابة</button>
+        <p id="mathMessage"></p>
+        <button onclick="resetMathGame()">إعادة اللعب</button>
     </div>
 
     <audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
@@ -195,33 +205,85 @@
         // لعبة العد السريع
         let countClicks = 0;
         let countAttempts = 0;
-        const maxCountAttempts = 3;
+        const maxCountAttempts = 50;
+        let countTimer;
 
         function startCountGame() {
             countClicks = 0;
-            countAttempts++;
+            countAttempts = 0;
             document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
             document.getElementById('countButton').onclick = countClick;
+                        countTimer = setTimeout(endCountGame, 30000); // مؤقت 30 ثانية
         }
 
         function countClick() {
             countClicks++;
             document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
-            if (countClicks >= 10) {
+            if (countClicks >= maxCountAttempts) {
+                clearTimeout(countTimer);
                 playClapSound();
-                document.getElementById('countMessage').textContent = `أحسنت! وصلت إلى 10 نقرات بسرعة!`;
+                document.getElementById('countMessage').textContent = `أحسنت! وصلت إلى 50 نقرة!`;
                 document.getElementById('countButton').onclick = null;
-            } else if (countAttempts >= maxCountAttempts) {
+            }
+        }
+
+        function endCountGame() {
+            if (countClicks < maxCountAttempts) {
                 playLaughSound();
-                document.getElementById('countMessage').textContent = `خسرت! لم تصل إلى 10 نقرات في المحاولة.`;
+                document.getElementById('countMessage').textContent = `انتهى الوقت! لم تصل إلى 50 نقرة.`;
                 document.getElementById('countButton').onclick = null;
             }
         }
 
         function resetCountGame() {
-                        document.getElementById('countButton').textContent = "ابدأ العد";
+            clearTimeout(countTimer);
+            document.getElementById('countButton').textContent = "ابدأ العد";
             document.getElementById('countMessage').textContent = '';
             countAttempts = 0;
+            countClicks = 0;
+        }
+
+        // لعبة الرياضيات السريعة
+        let mathTimer;
+        let mathScore = 0;
+
+        function startMathGame() {
+            mathScore = 0;
+            document.getElementById('mathMessage').textContent = '';
+            generateMathQuestion();
+            mathTimer = setTimeout(endMathGame, 30000); // مؤقت 30 ثانية
+        }
+
+        function generateMathQuestion() {
+            let num1 = Math.floor(Math.random() * 10) + 1;
+            let num2 = Math.floor(Math.random() * 10) + 1;
+            document.getElementById('mathQuestion').textContent = `${num1} + ${num2} = ?`;
+            return num1 + num2;
+        }
+
+        function submitMathAnswer() {
+            let answer = Number(document.getElementById('mathInput').value);
+            let correctAnswer = generateMathQuestion();
+            if (answer === correctAnswer) {
+                mathScore++;
+                document.getElementById('mathMessage').textContent = `إجابة صحيحة! نقاطك: ${mathScore}`;
+            } else {
+                document.getElementById('mathMessage').textContent = `إجابة خاطئة! حاول مرة أخرى.`;
+            }
+            document.getElementById('mathInput').value = '';
+            generateMathQuestion();
+        }
+
+        function endMathGame() {
+            playClapSound();
+            document.getElementById('mathMessage').textContent = `انتهى الوقت! نقاطك: ${mathScore}`;
+        }
+
+        function resetMathGame() {
+            clearTimeout(mathTimer);
+            document.getElementById('mathQuestion').textContent = '';
+            document.getElementById('mathMessage').textContent = '';
+            document.getElementById('mathInput').value = '';
         }
     </script>
 </body>
