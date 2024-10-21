@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لعبة إكس أو وتخمين الرقم</title>
+    <title>مجموعة ألعاب ممتعة</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
             text-align: center;
-            background-color: #f0f0f0;
+            background-color: #f0e68c;
+        }
+        h1 {
+            color: #ff4500;
         }
         .board {
             display: grid;
@@ -20,21 +23,34 @@
         .cell {
             width: 100px;
             height: 100px;
-            background-color: white;
-            border: 2px solid #000;
+            background-color: #fff;
+            border: 3px solid #000;
             font-size: 2rem;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
+            background-color: #f5f5dc;
         }
         button {
             margin: 10px;
             padding: 10px 20px;
-            font-size: 1rem;
+            font-size: 1.2rem;
+            background-color: #ff6347;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #ff4500;
         }
         .game-section {
             margin-top: 50px;
+            padding: 20px;
+            background-color: #ffebcd;
+            border-radius: 15px;
         }
     </style>
 </head>
@@ -51,11 +67,8 @@
 
     <div class="game-section">
         <h1>لعبة تخمين الرقم</h1>
-        <p id="guessStatus">اختر نمط اللعب: </p>
-        <button onclick="startGuessGame('friend')">اللعب ضد صديق</button>
-        <button onclick="startGuessGame('computer')">اللعب ضد الكمبيوتر</button>
-        
-        <div id="guessGameArea" style="display: none;">
+        <p id="guessStatus">حاول تخمين الرقم من 1 إلى 10 (ثلاث محاولات فقط)</p>
+        <div id="guessGameArea">
             <input type="number" id="guessInput" placeholder="أدخل رقم من 1 إلى 10">
             <button onclick="submitGuess()">إرسال التخمين</button>
             <p id="guessMessage"></p>
@@ -63,7 +76,16 @@
         </div>
     </div>
 
+    <div class="game-section">
+        <h1>لعبة جديدة: العد السريع</h1>
+        <p id="countStatus">اضغط على الزر بأسرع وقت ممكن! (ثلاث محاولات)</p>
+        <button id="countButton" onclick="startCountGame()">ابدأ العد</button>
+        <p id="countMessage"></p>
+        <button onclick="resetCountGame()">إعادة اللعب</button>
+    </div>
+
     <audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
+    <audio id="laughSound" src="https://www.soundjay.com/human/sounds/laugh-4.mp3" preload="auto"></audio>
 
     <script>
         // لعبة إكس أو
@@ -97,20 +119,14 @@
                     rounds++;
                     playClapSound();
                     document.getElementById('status').textContent = `اللاعب ${currentPlayer} فاز!`;
-                    if (rounds < 3) {
-                        setTimeout(resetBoard, 2000); 
-                    } else {
+                    if (rounds >= 3) {
                         document.getElementById('status').textContent = `اللعبة انتهت! الفائز: ${currentPlayer}`;
-                        rounds = 0;
                     }
                 } else if (board.every(cell => cell)) {
                     rounds++;
                     document.getElementById('status').textContent = "تعادل!";
-                    if (rounds < 3) {
-                        setTimeout(resetBoard, 2000); 
-                    } else {
+                    if (rounds >= 3) {
                         document.getElementById('status').textContent = `اللعبة انتهت!`;
-                        rounds = 0;
                     }
                 } else {
                     currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
@@ -134,16 +150,7 @@
             );
         }
 
-        function resetBoard() {
-            board = Array(9).fill(null);
-            document.getElementById('board').innerHTML = board.map((_, index) => `<div class="cell" onclick="handleClick(${index})"></div>`).join('');
-            currentPlayer = 'X';
-            document.getElementById('status').textContent = `جولة جديدة! اللاعب ${currentPlayer} يبدأ`;
-        }
-
         function resetGame() {
-            rounds = 0;
-            playerWins = { X: 0, O: 0 };
             startGame(gameMode);
         }
 
@@ -151,41 +158,70 @@
             document.getElementById('clapSound').play();
         }
 
+        function playLaughSound() {
+            document.getElementById('laughSound').play();
+        }
+
         // لعبة تخمين الرقم
         let targetNumber;
-        let guessMode;
-        let guessRounds = 0;
+        let guessAttempts = 0;
+        const maxGuessAttempts = 3;
 
-        function startGuessGame(mode) {
-            guessMode = mode;
+        function startGuessGame() {
             targetNumber = Math.floor(Math.random() * 10) + 1;
-            guessRounds = 0;
-            document.getElementById('guessStatus').textContent = `ابدأ التخمين!`;
-            document.getElementById('guessGameArea').style.display = 'block';
+            guessAttempts = 0;
+            document.getElementById('guessMessage').textContent = '';
+            document.getElementById('guessInput').value = '';
         }
 
         function submitGuess() {
             let guess = Number(document.getElementById('guessInput').value);
+            guessAttempts++;
             if (guess === targetNumber) {
-                guessRounds++;
                 playClapSound();
                 document.getElementById('guessMessage').textContent = `أحسنت! لقد خمنت الرقم الصحيح: ${targetNumber}`;
-                if (guessRounds < 3) {
-                    setTimeout(resetGuessGame, 2000);
-                } else {
-                    document.getElementById('guessMessage').textContent = `اللعبة انتهت!`;
-                    guessRounds = 0;
-                }
+            } else if (guessAttempts >= maxGuessAttempts) {
+                playLaughSound();
+                document.getElementById('guessMessage').textContent = `خسرت! الرقم الصحيح كان: ${targetNumber}`;
             } else {
                 document.getElementById('guessMessage').textContent = guess > targetNumber ? 'الرقم أقل!' : 'الرقم أكبر!';
             }
         }
 
         function resetGuessGame() {
-            targetNumber = Math.floor(Math.random() * 10) + 1;
-            document.getElementById('guessMessage').textContent = '';
-            document.getElementById('guessInput').value = '';
-            document.getElementById('guessStatus').textContent = 'ابدأ الجولة الجديدة!';
+            startGuessGame();
+        }
+
+        // لعبة العد السريع
+        let countClicks = 0;
+        let countAttempts = 0;
+        const maxCountAttempts = 3;
+
+        function startCountGame() {
+            countClicks = 0;
+            countAttempts++;
+            document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
+            document.getElementById('countButton').onclick = countClick;
+        }
+
+        function countClick() {
+            countClicks++;
+            document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
+            if (countClicks >= 10) {
+                playClapSound();
+                document.getElementById('countMessage').textContent = `أحسنت! وصلت إلى 10 نقرات بسرعة!`;
+                document.getElementById('countButton').onclick = null;
+            } else if (countAttempts >= maxCountAttempts) {
+                playLaughSound();
+                document.getElementById('countMessage').textContent = `خسرت! لم تصل إلى 10 نقرات في المحاولة.`;
+                document.getElementById('countButton').onclick = null;
+            }
+        }
+
+        function resetCountGame() {
+                        document.getElementById('countButton').textContent = "ابدأ العد";
+            document.getElementById('countMessage').textContent = '';
+            countAttempts = 0;
         }
     </script>
 </body>
