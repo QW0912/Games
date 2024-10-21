@@ -205,44 +205,53 @@ function resetGuessGame() {
 
         // لعبة العد السريع
         let countClicks = 0;
-        let countAttempts = 0;
-        const maxCountAttempts = 50;
-        let countTimer;
+const maxClicks = 50;
+let countTimer;
+let countdownTimer;
+let timeLeft = 30;
 
-        function startCountGame() {
-            countClicks = 0;
-            countAttempts = 0;
-            document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
-            document.getElementById('countButton').onclick = countClick;
-                        countTimer = setTimeout(endCountGame, 30000); // مؤقت 30 ثانية
-        }
+function startCountGame() {
+    countClicks = 0;
+    timeLeft = 30;
+    countdownTimer = setInterval(updateTimer, 1000);
+    countTimer = setTimeout(endCountGame, 30000); // مؤقت 30 ثانية
+    document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
+    document.getElementById('countButton').onclick = countClick;
+    document.getElementById('countMessage').textContent = '';
+}
 
-        function countClick() {
-            countClicks++;
-            document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
-            if (countClicks >= maxCountAttempts) {
-                clearTimeout(countTimer);
-                playClapSound();
-                document.getElementById('countMessage').textContent = `أحسنت! وصلت إلى 50 نقرة!`;
-                document.getElementById('countButton').onclick = null;
-            }
-        }
+function countClick() {
+    countClicks++;
+    document.getElementById('countButton').textContent = `اضغط بسرعة! (${countClicks})`;
+    if (countClicks >= maxClicks) {
+        clearTimeout(countTimer);
+        clearInterval(countdownTimer);
+        playClapSound();
+        document.getElementById('countMessage').textContent = `أحسنت! وصلت إلى 50 نقرة!`;
+        document.getElementById('countButton').onclick = null;
+    }
+}
 
-        function endCountGame() {
-            if (countClicks < maxCountAttempts) {
-                playLaughSound();
-                document.getElementById('countMessage').textContent = `انتهى الوقت! لم تصل إلى 50 نقرة.`;
-                document.getElementById('countButton').onclick = null;
-            }
-        }
+function updateTimer() {
+    timeLeft--;
+    document.getElementById('countdownTimer').textContent = timeLeft;
+    if (timeLeft <= 0) {
+        clearInterval(countdownTimer);
+    }
+}
 
-        function resetCountGame() {
-            clearTimeout(countTimer);
-            document.getElementById('countButton').textContent = "ابدأ العد";
-            document.getElementById('countMessage').textContent = '';
-            countAttempts = 0;
-            countClicks = 0;
-        }
+function endCountGame() {
+    if (countClicks < maxClicks) {
+        playLaughSound();
+        document.getElementById('countMessage').textContent = `انتهى الوقت! لم تصل إلى 50 نقرة.`;
+        document.getElementById('countButton').onclick = null;
+    }
+}
+
+function resetCountGame() {
+    clearTimeout(countTimer);
+    clearInterval(countdownTimer);
+    document.getElementById('countButton').textContent = "ابد
 
         // لعبة الرياضيات السريعة
         let mathTimer;
