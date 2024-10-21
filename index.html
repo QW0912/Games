@@ -75,7 +75,7 @@
         <p id="status">اختر نمط اللعب:</p>
         <button onclick="startLocalGame('friend')">اللعب مع صديق</button>
         <button onclick="startLocalGame('computer')">اللعب ضد الكمبيوتر</button>
-        <button onclick="startOnlineGame()">اللعب أونلاين</button>
+        <button onclick="alert('هذا التحديث تحت التطوير، انتظروا!')">اللعب أونلاين</button>
 
         <div id="gameArea">
             <div class="board" id="board">
@@ -117,15 +117,21 @@
     <audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
     <audio id="laughSound" src="https://www.soundjay.com/human/sounds/laugh-4.mp3" preload="auto"></audio>
 
-    <script src="/socket.io/socket.io.js"></script>
     <script>
+        // متغيرات لعبة إكس أو
         let board, currentPlayer, gameMode, isOnlineGame = false, playerSymbol = 'X';
         const boardCells = document.querySelectorAll('.cell');
 
-        // تبديل عرض الألعاب
         function showGame(gameId) {
             document.querySelectorAll('.game-section').forEach(game => game.classList.remove('active'));
             document.getElementById(gameId).classList.add('active');
+            if (gameId === 'ticTacToe') {
+                resetGame();
+            } else if (gameId === 'numberGuess') {
+                resetGuessGame();
+            } else if (gameId === 'fastClick') {
+                resetCountGame();
+            }
         }
 
         // لعبة إكس أو
@@ -139,30 +145,25 @@
             updateBoard();
         }
 
-        function startOnlineGame() {
-            isOnlineGame = true;
-            const playerName = prompt('أدخل اسمك للانضمام إلى اللعبة:');
-            socket.emit('joinGame', playerName);
-        }
-
         function updateBoard() {
             boardCells.forEach((cell, index) => {
                 cell.textContent = board[index];
-                cell.addEventListener('click', () => handleMove(index));
+                cell.onclick = () => handleMove(index);
             });
         }
 
         function handleMove(index) {
-            if (!board[index] && (!isOnlineGame || currentPlayer === playerSymbol)) {
+            if (!board[index] && !isOnlineGame) {
                 board[index] = currentPlayer;
                 updateBoard();
                 if (checkWin()) {
+                    playClapSound();
                     document.getElementById('status').textContent = `اللاعب ${currentPlayer} فاز!`;
                 } else if (board.every(cell => cell)) {
                     document.getElementById('status').textContent = 'تعادل!';
                 } else {
                     switchTurn();
-                    if (gameMode === 'computer' && currentPlayer === 'O' && !isOnlineGame) {
+                    if (gameMode === 'computer' && currentPlayer === 'O') {
                         computerMove();
                     }
                 }
@@ -195,32 +196,11 @@
             startLocalGame(gameMode);
         }
 
-        const socket = io();
-        socket.on('playerData', (data) => {
-            playerSymbol = data.symbol;
-            document.getElementById('status').textContent = `مرحبًا ${data.name}! أنت اللاعب ${playerSymbol}`;
-        });
-
-        socket.on('updateBoard', (newBoard) => {
-            board = newBoard;
-            updateBoard();
-        });
-
-        socket.on('playerTurn', (nextPlayer) => {
-            currentPlayer = nextPlayer;
-            document.getElementById('status').textContent = `اللاعب ${currentPlayer} يلعب الآن`;
-        });
-
-        socket.on('resetGame', () => {
-            board = Array(9).fill(null);
-            updateBoard();
-        });
-
         // لعبة تخمين الرقم
         let targetNumber, guessAttempts = 0;
         const maxGuessAttempts = 3;
 
-        function startGuessGame() {
+        function resetGuessGame() {
             targetNumber = Math.floor(Math.random() * 50) + 1;
             guessAttempts = 0;
             document.getElementById('guessMessage').textContent = '';
@@ -235,14 +215,10 @@
                 document.getElementById('guessMessage').textContent = `أحسنت! لقد خمنت الرقم الصحيح: ${targetNumber}`;
             } else if (guessAttempts >= maxGuessAttempts) {
                 playLaughSound();
-                document.getElementById('guessMessage').textContent = `خسرت! الرقم الصحيح كان: ${targetNumber}`;
+                                document.getElementById('guessMessage').textContent = `خسرت! الرقم الصحيح كان: ${targetNumber}`;
             } else {
                 document.getElementById('guessMessage').textContent = guess > targetNumber ? 'الرقم أقل!' : 'الرقم أكبر!';
             }
-        }
-
-        function resetGuessGame() {
-            startGuessGame();
         }
 
         // لعبة العد السريع
