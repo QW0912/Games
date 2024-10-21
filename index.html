@@ -1,296 +1,137 @@
-‏<!DOCTYPE html>
-‏<html lang="ar">
-‏<head>
-‏    <meta charset="UTF-8">
-‏    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-‏    <title>مجموعة ألعاب الأبطال الخارقين</title>
-‏    <style>
-‏        body {
-‏            font-family: Arial, sans-serif;
-‏            text-align: center;
-‏            background-color: #f4f4f4;
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة إكس أو</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
         }
-‏        h1 {
-‏            font-size: 3em;
-‏            color: #333;
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 10px;
+            justify-content: center;
+            margin: 20px;
         }
-‏        .games {
-‏            display: flex;
-‏            flex-direction: column;
-‏            align-items: center;
-‏            margin-top: 30px;
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border: 2px solid #000;
+            font-size: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
         }
-‏        .games button {
-‏            font-size: 2em;
-‏            padding: 20px 40px;
-‏            margin: 20px;
-‏            cursor: pointer;
-‏            background-color: #ff4757;
-‏            color: white;
-‏            border: 3px solid #333;
-‏            border-radius: 15px;
-‏            box-shadow: 0 8px #333;
-‏            transition: 0.2s;
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 1rem;
         }
-‏        .games button:hover {
-‏            background-color: #ff6b81;
-        }
-‏        .games button:active {
-‏            box-shadow: 0 4px #333;
-‏            transform: translateY(4px);
-        }
-‏        #message {
-‏            margin-top: 20px;
-‏            font-size: 1.5em;
-‏            color: green;
-        }
-‏        .footer {
-‏            margin-top: 30px;
-‏            font-size: 1em;
-‏            color: blue;
-        }
-‏    </style>
-‏</head>
-‏<body>
+    </style>
+</head>
+<body>
+    <h1>لعبة إكس أو</h1>
+    <p id="status">اختر نمط اللعب: </p>
+    <button onclick="startGame('friend')">اللعب ضد صديق</button>
+    <button onclick="startGame('computer')">اللعب ضد الكمبيوتر</button>
+    
+    <div id="gameArea" style="display: none;">
+        <div class="board" id="board"></div>
+        <button onclick="resetGame()">إعادة اللعب</button>
+    </div>
 
-‏    <h1>مجموعة ألعاب الأبطال الخارقين</h1>
+    <audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
 
-    <!-- قائمة الألعاب -->
-‏    <div class="games">
-‏        <button onclick="playTicTacToe()">إكس أو</button>
-‏        <button onclick="playGuessNumber()">تخمين الرقم</button>
-‏        <button onclick="playRockPaperScissors()">حجر-ورقة-مقص</button>
-‏        <button onclick="playMemoryGame()">لعبة الذاكرة</button>
-‏        <button onclick="playQuizGame()">لعبة الأسئلة</button>
-‏    </div>
+    <script>
+        let board;
+        let currentPlayer;
+        let gameMode;
+        let rounds = 0;
+        let playerWins = { X: 0, O: 0 };
+        const winningCombinations = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6] // Diagonals
+        ];
 
-‏    <div id="gameArea"></div>
-‏    <h2 id="message"></h2>
-
-    <!-- نص ودود الشمري -->
-‏    <div class="footer">
-        ودود الشمري
-‏    </div>
-
-‏    <audio id="clapSound" src="https://www.soundjay.com/human/applause-8.mp3"></audio>
-
-‏    <script>
-        // لعبة إكس أو مع خيار اللعب ضد صديق أو ضد الكمبيوتر
-‏        let board, currentPlayer, playerCount;
-‏        const clapSound = document.getElementById('clapSound');
-‏        const message = document.getElementById('message');
-
-‏        function playTicTacToe() {
-‏            document.getElementById('gameArea').innerHTML = `
-‏                <h2>لعبة إكس أو</h2>
-‏                <div>
-‏                    <button onclick="startTicTacToe(1)">العب مع الكمبيوتر</button>
-‏                    <button onclick="startTicTacToe(2)">العب مع صديق</button>
-‏                </div>
-‏                <div class="board" id="board">
-‏                    <div class="cell" id="cell0"></div>
-‏                    <div class="cell" id="cell1"></div>
-‏                    <div class="cell" id="cell2"></div>
-‏                    <div class="cell" id="cell3"></div>
-‏                    <div class="cell" id="cell4"></div>
-‏                    <div class="cell" id="cell5"></div>
-‏                    <div class="cell" id="cell6"></div>
-‏                    <div class="cell" id="cell7"></div>
-‏                    <div class="cell" id="cell8"></div>
-‏                </div>
-            `;
-‏            resetBoard();
+        function startGame(mode) {
+            gameMode = mode;
+            currentPlayer = 'X';
+            board = Array(9).fill(null);
+            rounds = 0;
+            document.getElementById('status').textContent = `اللاعب ${currentPlayer} يبدأ`;
+            document.getElementById('gameArea').style.display = 'block';
+            document.getElementById('board').innerHTML = board.map((_, index) => `<div class="cell" onclick="handleClick(${index})"></div>`).join('');
         }
 
-‏        function startTicTacToe(players) {
-‏            playerCount = players;
-‏            currentPlayer = 'X';
-‏            board = ["", "", "", "", "", "", "", "", ""];
-‏            document.querySelectorAll('.cell').forEach(cell => {
-‏                cell.addEventListener('click', handleClick);
-            });
-‏            message.textContent = `الدور لـ X`;
-        }
-
-‏        function handleClick(event) {
-‏            const index = Array.from(document.querySelectorAll('.cell')).indexOf(event.target);
-‏            if (board[index] === "") {
-‏                board[index] = currentPlayer;
-‏                event.target.textContent = currentPlayer;
-‏                if (checkWinner()) {
-‏                    gameEnd(currentPlayer);
-‏                } else if (boardFull()) {
-‏                    gameEnd(null);
-‏                } else {
-‏                    switchPlayer();
-‏                    if (playerCount === 1 && currentPlayer === 'O') {
-‏                        computerMove();
-                    }
-                }
-            }
-        }
-
-‏        function switchPlayer() {
-‏            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-‏            message.textContent = `الدور لـ ${currentPlayer}`;
-        }
-
-‏        function computerMove() {
-‏            let emptyCells = [];
-‏            board.forEach((cell, index) => {
-‏                if (cell === "") emptyCells.push(index);
-            });
-‏            const randomIndex = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-‏            board[randomIndex] = 'O';
-‏            document.querySelectorAll('.cell')[randomIndex].textContent = 'O';
-‏            if (checkWinner()) {
-‏                gameEnd('O');
-‏            } else if (boardFull()) {
-‏                gameEnd(null);
-‏            } else {
-‏                switchPlayer();
-            }
-        }
-
-‏        function boardFull() {
-‏            return board.every(cell => cell !== "");
-        }
-
-‏        function checkWinner() {
-‏            const winPatterns = [
-‏                [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-‏                [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-‏                [0, 4, 8], [2, 4, 6]  // Diagonals
-            ];
-‏            return winPatterns.some(pattern => {
-‏                return pattern.every(index => board[index] === currentPlayer);
-            });
-        }
-
-‏        function gameEnd(winner) {
-‏            if (winner) {
-‏                message.textContent = `تهانينا! لاعب ${winner} فاز!`;
-‏                clapSound.play();
-‏            } else {
-‏                message.textContent = "انتهت اللعبة بالتعادل!";
-            }
-‏            document.querySelectorAll('.cell').forEach(cell => cell.removeEventListener('click', handleClick));
-        }
-
-‏        function resetBoard() {
-‏            board = ["", "", "", "", "", "", "", "", ""];
-‏            document.querySelectorAll('.cell').forEach(cell => {
-‏                cell.textContent = "";
-            });
-        }
-
-        // لعبة تخمين الرقم
-‏        function playGuessNumber() {
-‏            let randomNumber = Math.floor(Math.random() * 100) + 1;
-‏            let attempts = 0;
-‏            document.getElementById('gameArea').innerHTML = `
-‏                <h2>تخمين الرقم بين 1 و 100</h2>
-‏                <input type="number" id="guessInput" placeholder="أدخل رقمك">
-‏                <button onclick="checkGuess()">تحقق</button>
-‏                <p id="feedback"></p>
-            `;
-            
-‏            window.checkGuess = function() {
-‏                let guess = document.getElementById('guessInput').value;
-‏                attempts++;
-‏                if (guess == randomNumber) {
-‏                    document.getElementById('feedback').textContent = "تهانينا! لقد خمّنت الرقم الصحيح في " + attempts + " محاولة.";
-‏                } else if (guess < randomNumber) {
-‏                    document.getElementById('feedback').textContent = "الرقم المدخل أصغر من الرقم المطلوب!";
-‏                } else {
-‏                    document.getElementById('feedback').textContent = "الرقم المدخل أكبر من الرقم المطلوب!";
-                }
-            };
-        }
-
-        // لعبة حجر-ورقة-مقص
-‏        function playRockPaperScissors() {
-‏            document.getElementById('gameArea').innerHTML = `
-‏                <h2>حجر-ورقة-مقص</h2>
-‏                <button onclick="playRPS('حجر')">حجر</button>
-‏                <button onclick="playRPS('ورقة')">ورقة</button>
-‏                <button onclick="playRPS('مقص')">مقص</button>
-‏                <p id="rpsResult"></p>
-            `;
-            
-‏            const choices = ["حجر", "ورقة", "مقص"];
-‏            window.playRPS = function(playerChoice) {
-‏                const computerChoice = choices[Math.floor(Math.random() * choices.length)];
-‏                if (playerChoice === computerChoice) {
-‏                    document.getElementById('rpsResult').textContent = `تعادل! الكمبيوتر اختار ${computerChoice} أيضًا.`;
-‏                } else if ((playerChoice === "حجر" && computerChoice === "مقص") ||
-‏                           (playerChoice === "ورقة" && computerChoice === "حجر") ||
-‏                           (playerChoice === "مقص" && computerChoice === "ورقة")) {
-‏                    document.getElementById('rpsResult').textContent = `لقد فزت! الكمبيوتر اختار ${computerChoice}.`;
-‏                } else {
-‏                                        document.getElementById('rpsResult').textContent = `لقد خسرت! الكمبيوتر اختار ${computerChoice}.`;
-                }
-            };
-        }
-
-        // لعبة الذاكرة (مبدئية)
-        function playMemoryGame() {
-            document.getElementById('gameArea').innerHTML = `
-                <h2>لعبة الذاكرة</h2>
-                <p>لعبة بسيطة تحتاج لتركيز! يمكنك تطويرها لاحقًا.</p>
-            `;
-        }
-
-        // لعبة الأسئلة
-        function playQuizGame() {
-            const questions = [
-                { question: "ما هو أكبر كوكب في النظام الشمسي؟", answer: "المشتري" },
-                { question: "كم عدد ألوان قوس قزح؟", answer: "7" },
-                { question: "من هو مخترع المصباح الكهربائي؟", answer: "توماس إديسون" },
-                { question: "ما هو الحيوان الأسرع في العالم؟", answer: "الفهد" },
-                { question: "ما هي اللغة الأكثر تحدثاً في العالم؟", answer: "الإنجليزية" },
-                { question: "ما هو العنصر الأساسي في الشمس؟", answer: "الهيدروجين" },
-                { question: "ما هو أعلى جبل في العالم؟", answer: "إيفرست" },
-                { question: "من هو مؤسس شركة مايكروسوفت؟", answer: "بيل غيتس" },
-                { question: "كم عدد عظام جسم الإنسان؟", answer: "206" },
-                { question: "ما هي عاصمة إيطاليا؟", answer: "روما" },
-                { question: "ما هو أكبر محيط في العالم؟", answer: "المحيط الهادئ" },
-                { question: "ما هو اسم الكوكب الأحمر؟", answer: "المريخ" },
-                { question: "كم عدد كواكب المجموعة الشمسية؟", answer: "8" },
-                { question: "ما هي أول دولة صنعت الشاي؟", answer: "الصين" },
-                { question: "من هو مكتشف أمريكا؟", answer: "كريستوفر كولومبوس" },
-                { question: "ما هي أول دولة عربية استضافت كأس العالم؟", answer: "قطر" },
-                { question: "ما هو أطول نهر في العالم؟", answer: "نهر النيل" },
-                { question: "ما هو الحيوان الذي لا يستطيع القفز؟", answer: "الفيل" },
-                { question: "ما هو أسرع طائر في العالم؟", answer: "الشاهين" },
-                { question: "ما هي الدولة التي اخترعت الإنترنت؟", answer: "الولايات المتحدة" }
-            ];
-            let currentQuestion = 0;
-            document.getElementById('gameArea').innerHTML = `
-                <h2>لعبة الأسئلة</h2>
-                <p id="question">${questions[currentQuestion].question}</p>
-                <input type="text" id="answerInput" placeholder="أدخل إجابتك">
-                <button onclick="checkAnswer()">تحقق</button>
-                <p id="quizFeedback"></p>
-            `;
-            
-            window.checkAnswer = function() {
-                let answer = document.getElementById('answerInput').value;
-                if (answer.toLowerCase() === questions[currentQuestion].answer.toLowerCase()) {
-                    document.getElementById('quizFeedback').textContent = "إجابة صحيحة!";
-                    currentQuestion++;
-                    if (currentQuestion < questions.length) {
-                        document.getElementById('question').textContent = questions[currentQuestion].question;
-                        document.getElementById('answerInput').value = "";
+        function handleClick(index) {
+            if (!board[index]) {
+                board[index] = currentPlayer;
+                document.getElementById('board').children[index].textContent = currentPlayer;
+                if (checkWin()) {
+                    playerWins[currentPlayer]++;
+                    rounds++;
+                    playClapSound();
+                    document.getElementById('status').textContent = `اللاعب ${currentPlayer} فاز!`;
+                    if (rounds < 3) {
+                        setTimeout(resetBoard, 2000); 
                     } else {
-                        document.getElementById('quizFeedback').textContent = "لقد أنهيت اللعبة!";
+                        document.getElementById('status').textContent = `اللعبة انتهت! الفائز: ${currentPlayer}`;
+                        rounds = 0;
+                    }
+                } else if (board.every(cell => cell)) {
+                    rounds++;
+                    document.getElementById('status').textContent = "تعادل!";
+                    if (rounds < 3) {
+                        setTimeout(resetBoard, 2000); 
+                    } else {
+                        document.getElementById('status').textContent = `اللعبة انتهت!`;
+                        rounds = 0;
                     }
                 } else {
-                    document.getElementById('quizFeedback').textContent = "إجابة خاطئة! حاول مرة أخرى.";
+                    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                    document.getElementById('status').textContent = `اللاعب ${currentPlayer} يلعب الآن`;
+                    if (gameMode === 'computer' && currentPlayer === 'O') {
+                        computerMove();
+                    }
                 }
-            };
+            }
+        }
+
+        function computerMove() {
+            let availableCells = board.map((cell, index) => cell === null ? index : null).filter(index => index !== null);
+            let randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
+            handleClick(randomCell);
+        }
+
+        function checkWin() {
+            return winningCombinations.some(combination => 
+                combination.every(index => board[index] === currentPlayer)
+            );
+        }
+
+        function resetBoard() {
+            board = Array(9).fill(null);
+            document.getElementById('board').innerHTML = board.map((_, index) => `<div class="cell" onclick="handleClick(${index})"></div>`).join('');
+            currentPlayer = 'X';
+            document.getElementById('status').textContent = `جولة جديدة! اللاعب ${currentPlayer} يبدأ`;
+        }
+
+        function resetGame() {
+            rounds = 0;
+            playerWins = { X: 0, O: 0 };
+            startGame(gameMode);
+        }
+
+        function playClapSound() {
+            document.getElementById('clapSound').play();
         }
     </script>
-
 </body>
 </html>
