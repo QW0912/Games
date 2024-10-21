@@ -60,6 +60,25 @@
             font-size: 1.2rem;
             color: #ff4500;
         }
+        /* تصميم لعبة التوازن */
+        #goal {
+            width: 100px;
+            height: 50px;
+            background-color: #007bff;
+            margin: 0 auto;
+            border-radius: 10px;
+            position: relative;
+        }
+        #ball {
+            width: 20px;
+            height: 20px;
+            background-color: #ff0000;
+            border-radius: 50%;
+            position: absolute;
+            top: 15px;
+            left: 40px;
+            transition: transform 0.5s;
+        }
     </style>
 </head>
 <body>
@@ -70,8 +89,6 @@
     <button onclick="showGame('fastClick')">لعبة العد السريع</button>
     <button onclick="showGame('wordGuess')">لعبة تخمين الكلمة</button>
     <button onclick="showGame('balanceGame')">لعبة التوازن</button>
-    <button onclick="showGame('puzzleGame')">لعبة الألغاز</button>
-    <button onclick="showGame('memoryGame')">لعبة مطابقة الصور</button>
 
     <!-- لعبة إكس أو -->
     <div id="ticTacToe" class="game-section">
@@ -132,29 +149,10 @@
     <div id="balanceGame" class="game-section">
         <h2>لعبة التوازن</h2>
         <p id="balanceStatus">حاول أن تضرب الكرة على العارضة!</p>
+        <div id="goal"><div id="ball"></div></div>
         <button id="throwButton" onclick="throwBall()">ارمي الكرة!</button>
         <p id="balanceMessage"></p>
         <button onclick="resetBalanceGame()">إعادة اللعب</button>
-    </div>
-
-    <!-- لعبة الألغاز -->
-    <div id="puzzleGame" class="game-section">
-        <h2>لعبة الألغاز</h2>
-        <p id="puzzleStatus">رتب الصور!</p>
-        <div class="board" id="puzzleBoard">
-            <!-- صور مفقودة تحتاج إلى ترتيب -->
-        </div>
-        <button onclick="resetPuzzleGame()">إعادة اللعب</button>
-    </div>
-
-    <!-- لعبة مطابقة الصور -->
-    <div id="memoryGame" class="game-section">
-        <h2>لعبة مطابقة الصور</h2>
-        <p id="memoryStatus">مطابقة الصور!</p>
-        <div class="board" id="memoryBoard">
-            <!-- بطاقات الصور تحتاج إلى مطابقة -->
-        </div>
-        <button onclick="resetMemoryGame()">إعادة اللعب</button>
     </div>
 
     <audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
@@ -176,8 +174,6 @@
             if (gameId === 'fastClick') resetCountGame();
             if (gameId === 'wordGuess') resetWordGuess();
             if (gameId === 'balanceGame') resetBalanceGame();
-            if (gameId === 'puzzleGame') resetPuzzleGame();
-            if (gameId === 'memoryGame') resetMemoryGame();
         }
 
         // لعبة إكس أو
@@ -199,6 +195,7 @@
                 cell.onclick = () => handleMove(index);
             });
         }
+
         function handleMove(index) {
             if (!board[index] && !isOnlineGame) {
                 board[index] = currentPlayer;
@@ -338,29 +335,21 @@
         // لعبة التوازن
         function resetBalanceGame() {
             document.getElementById('balanceMessage').textContent = '';
+            document.getElementById('ball').style.transform = 'translate(0px, 0px)';
         }
 
         function throwBall() {
             const randomOutcome = Math.random();
+            const ball = document.getElementById('ball');
             if (randomOutcome > 0.5) {
                 playClapSound();
+                ball.style.transform = 'translate(0px, 50px)'; // الكرة تدخل المرمى
                 document.getElementById('balanceMessage').textContent = `نجحت في رمي الكرة!`;
             } else {
                 playLaughSound();
+                ball.style.transform = 'translate(100px, 50px)'; // الكرة تخرج من المرمى
                 document.getElementById('balanceMessage').textContent = `فشلت في رمي الكرة.`;
             }
-        }
-
-        // لعبة الألغاز
-        function resetPuzzleGame() {
-            document.getElementById('puzzleBoard').innerHTML = ''; // امسح المحتوى
-            // أضف المنطق لإنشاء اللغز هنا
-        }
-
-        // لعبة مطابقة الصور
-        function resetMemoryGame() {
-            document.getElementById('memoryBoard').innerHTML = ''; // امسح المحتوى
-            // أضف المنطق لإنشاء لعبة المطابقة هنا
         }
 
         // صوتيات
