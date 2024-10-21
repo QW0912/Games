@@ -60,7 +60,7 @@
             font-size: 1.2rem;
             color: #ff4500;
         }
-        /* تصميم لعبة التوازن */
+        /* تصميم لعبة الحظ */
         #goal {
             width: 100px;
             height: 50px;
@@ -88,7 +88,7 @@
     <button onclick="showGame('numberGuess')">لعبة تخمين الرقم</button>
     <button onclick="showGame('fastClick')">لعبة العد السريع</button>
     <button onclick="showGame('wordGuess')">لعبة تخمين الكلمة</button>
-    <button onclick="showGame('balanceGame')">لعبة التوازن</button>
+    <button onclick="showGame('luckGame')">لعبة الحظ</button>
 
     <!-- لعبة إكس أو -->
     <div id="ticTacToe" class="game-section">
@@ -139,20 +139,22 @@
     <div id="wordGuess" class="game-section">
         <h2>لعبة تخمين الكلمة</h2>
         <p id="wordStatus">تخمين الكلمة (5 أحرف)</p>
+        <p id="hintStatus">التلميح: <span id="hintMessage"></span></p>
         <input type="text" id="wordInput" maxlength="5" placeholder="أدخل كلمتك">
         <button onclick="submitWordGuess()">إرسال التخمين</button>
         <p id="wordMessage"></p>
+        <p>الوقت المتبقي: <span class="timer" id="wordCountdownTimer">30</span> ثانية</p>
         <button onclick="resetWordGuess()">إعادة اللعب</button>
     </div>
 
-    <!-- لعبة التوازن -->
-    <div id="balanceGame" class="game-section">
-        <h2>لعبة التوازن</h2>
-        <p id="balanceStatus">حاول أن تضرب الكرة على العارضة!</p>
+    <!-- لعبة الحظ -->
+    <div id="luckGame" class="game-section">
+        <h2>لعبة الحظ</h2>
+        <p id="luckStatus">حاول أن تضرب الكرة على العارضة!</p>
         <div id="goal"><div id="ball"></div></div>
         <button id="throwButton" onclick="throwBall()">ارمي الكرة!</button>
-        <p id="balanceMessage"></p>
-        <button onclick="resetBalanceGame()">إعادة اللعب</button>
+        <p id="luckMessage"></p>
+        <button onclick="resetLuckGame()">إعادة اللعب</button>
     </div>
 
     <audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-8.mp3" preload="auto"></audio>
@@ -165,6 +167,21 @@
         const maxClicks = 50;
         let countTimer, countdownTimer;
 
+        // لعبة تخمين الكلمة
+        const words = [
+            { word: "تفاح", hint: "فاكهة حمراء" },
+            { word: "موز", hint: "فاكهة صفراء طويلة" },
+            { word: "برتقال", hint: "فاكهة دائرية" },
+            { word: "عنب", hint: "فاكهة صغيرة وحامضة" },
+            { word: "بطيخ", hint: "فاكهة كبيرة خضراء" },
+            { word: "بطريق", hint: "كائن يعيش في الثلج" },
+            { word: "دب", hint: "كائن كبير يعيش في الغابات" },
+            { word: "سمكة", hint: "تعيش في الماء" },
+            { word: "زرافة", hint: "حيوان طويل العنق" },
+            { word: "فيل", hint: "حيوان ضخم جداً" }
+        ];
+        let selectedWord, wordCountdownTimer;
+
         // لعبة إكس أو
         function showGame(gameId) {
             document.querySelectorAll('.game-section').forEach(game => game.classList.remove('active'));
@@ -173,7 +190,7 @@
             if (gameId === 'numberGuess') resetGuessGame();
             if (gameId === 'fastClick') resetCountGame();
             if (gameId === 'wordGuess') resetWordGuess();
-            if (gameId === 'balanceGame') resetBalanceGame();
+            if (gameId === 'luckGame') resetLuckGame();
         }
 
         // لعبة إكس أو
@@ -312,43 +329,73 @@
         }
 
         // لعبة تخمين الكلمة
-        const words = ["تفاح", "موز", "برتقال", "عنب", "بطيخ"];
-        let selectedWord;
-
         function resetWordGuess() {
             selectedWord = words[Math.floor(Math.random() * words.length)];
+            document.getElementById('hintMessage').textContent = selectedWord.hint;
             document.getElementById('wordMessage').textContent = '';
             document.getElementById('wordInput').value = '';
+            timeLeft = 30;
+            document.getElementById('wordCountdownTimer').textContent = timeLeft;
+            clearInterval(wordCountdownTimer);
+            wordCountdownTimer = setInterval(updateWordTimer, 1000);
+        }
+
+        function updateWordTimer() {
+            timeLeft--;
+            document.getElementById('wordCountdownTimer').textContent = timeLeft;
+            if (timeLeft <= 0) {
+                clearInterval(wordCountdownTimer);
+                document.getElementById('wordMessage').textContent = `انتهى الوقت! الكلمة كانت: ${selectedWord.word}`;
+                document.getElementById('wordInput').disabled = true;
+            }
         }
 
         function submitWordGuess() {
             const userGuess = document.getElementById('wordInput').value;
-            if (userGuess === selectedWord) {
-                playClapSound();
-                document.getElementById('wordMessage').textContent = `أحسنت! الكلمة الصحيحة هي: ${selectedWord}`;
+            if (userGuess === selectedWord.word) {
+                clearInterval(wordCountdownTimer);
+                document.getElementById('wordMessage').textContent = `أحسنت! الكلمة الصحيحة هي: ${selectedWord.word}`;
             } else {
-                playLaughSound();
                 document.getElementById('wordMessage').textContent = `خسرت! حاول مرة أخرى.`;
             }
         }
 
-        // لعبة التوازن
-        function resetBalanceGame() {
-            document.getElementById('balanceMessage').textContent = '';
+        // لعبة الحظ
+        let luckAttempts = 3; // عدد المحاولات
+        let goalsScored = 0; // عدد الأهداف
+
+        function resetLuckGame() {
+            document.getElementById('luckMessage').textContent = '';
             document.getElementById('ball').style.transform = 'translate(0px, 0px)';
+            goalsScored = 0;
+            luckAttempts = 3;
+            document.getElementById('throwButton').disabled = false;
         }
 
         function throwBall() {
-            const randomOutcome = Math.random();
-            const ball = document.getElementById('ball');
-            if (randomOutcome > 0.5) {
-                playClapSound();
-                ball.style.transform = 'translate(0px, 50px)'; // الكرة تدخل المرمى
-                document.getElementById('balanceMessage').textContent = `نجحت في رمي الكرة!`;
-            } else {
-                playLaughSound();
-                ball.style.transform = 'translate(100px, 50px)'; // الكرة تخرج من المرمى
-                document.getElementById('balanceMessage').textContent = `فشلت في رمي الكرة.`;
+            if (luckAttempts > 0) {
+                luckAttempts--;
+                const randomOutcome = Math.random();
+                const ball = document.getElementById('ball');
+                if (randomOutcome > 0.5) {
+                    playClapSound();
+                    goalsScored++;
+                    ball.style.transform = 'translate(0px, 50px)'; // الكرة تدخل المرمى
+                    document.getElementById('luckMessage').textContent = `هدف! الأهداف: ${goalsScored}`;
+                } else {
+                    playLaughSound();
+                    ball.style.transform = 'translate(100px, 50px)'; // الكرة تخرج من المرمى
+                    document.getElementById('luckMessage').textContent = `لم تدخل الكرة.`;
+                }
+                if (goalsScored >= 2) {
+                    document.getElementById('luckMessage').textContent = `فزت! الأهداف: ${goalsScored}`;
+                    document.getElementById('throwButton').disabled = true; // تعطيل الزر عند الفوز
+                }
+                if (luckAttempts === 0 && goalsScored < 2) {
+                    playLaughSound();
+                    document.getElementById('luckMessage').textContent = `انتهت المحاولات! الأهداف: ${goalsScored}.`;
+                    document.getElementById('throwButton').disabled = true; // تعطيل الزر عند انتهاء المحاولات
+                }
             }
         }
 
