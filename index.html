@@ -65,15 +65,16 @@
         <button onclick="resetGame()">إعادة اللعب</button>
     </div>
 
-    <div class="game-section">
-        <h1>لعبة تخمين الرقم</h1>
-        <p id="guessStatus">حاول تخمين الرقم من 1 إلى 10 (ثلاث محاولات فقط)</p>
-        <div id="guessGameArea">
-            <input type="number" id="guessInput" placeholder="أدخل رقم من 1 إلى 10">
-            <button onclick="submitGuess()">إرسال التخمين</button>
-            <p id="guessMessage"></p>
-            <button onclick="resetGuessGame()">إعادة اللعب</button>
-        </div>
+ <div class="game-section">
+    <h1>لعبة تخمين الرقم</h1>
+    <p id="guessStatus">حاول تخمين الرقم من 1 إلى 50 (ثلاث محاولات فقط)</p>
+    <div id="guessGameArea">
+        <input type="number" id="guessInput" placeholder="أدخل رقم من 1 إلى 50">
+        <button onclick="submitGuess()">إرسال التخمين</button>
+        <p id="guessMessage"></p>
+        <button onclick="resetGuessGame()">إعادة اللعب</button>
+    </div>
+</div>
     </div>
 
     <div class="game-section">
@@ -172,35 +173,35 @@
             document.getElementById('laughSound').play();
         }
 
-        // لعبة تخمين الرقم
-        let targetNumber;
-        let guessAttempts = 0;
-        const maxGuessAttempts = 3;
+        // لعبة تخمين الرقم// لعبة تخمين الرقم
+let targetNumber;
+let guessAttempts = 0;
+const maxGuessAttempts = 3;
 
-        function startGuessGame() {
-            targetNumber = Math.floor(Math.random() * 10) + 1;
-            guessAttempts = 0;
-            document.getElementById('guessMessage').textContent = '';
-            document.getElementById('guessInput').value = '';
-        }
+function startGuessGame() {
+    targetNumber = Math.floor(Math.random() * 50) + 1; // تم تغيير النطاق إلى 50
+    guessAttempts = 0;
+    document.getElementById('guessMessage').textContent = '';
+    document.getElementById('guessInput').value = '';
+}
 
-        function submitGuess() {
-            let guess = Number(document.getElementById('guessInput').value);
-            guessAttempts++;
-            if (guess === targetNumber) {
-                playClapSound();
-                document.getElementById('guessMessage').textContent = `أحسنت! لقد خمنت الرقم الصحيح: ${targetNumber}`;
-            } else if (guessAttempts >= maxGuessAttempts) {
-                playLaughSound();
-                document.getElementById('guessMessage').textContent = `خسرت! الرقم الصحيح كان: ${targetNumber}`;
-            } else {
-                document.getElementById('guessMessage').textContent = guess > targetNumber ? 'الرقم أقل!' : 'الرقم أكبر!';
-            }
-        }
+function submitGuess() {
+    let guess = Number(document.getElementById('guessInput').value);
+    guessAttempts++;
+    if (guess === targetNumber) {
+        playClapSound();
+        document.getElementById('guessMessage').textContent = `أحسنت! لقد خمنت الرقم الصحيح: ${targetNumber}`;
+    } else if (guessAttempts >= maxGuessAttempts) {
+        playLaughSound();
+        document.getElementById('guessMessage').textContent = `خسرت! الرقم الصحيح كان: ${targetNumber}`;
+    } else {
+        document.getElementById('guessMessage').textContent = guess > targetNumber ? 'الرقم أقل!' : 'الرقم أكبر!';
+    }
+}
 
-        function resetGuessGame() {
-            startGuessGame();
-        }
+function resetGuessGame() {
+    startGuessGame();
+}
 
         // لعبة العد السريع
         let countClicks = 0;
